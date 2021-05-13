@@ -78,12 +78,13 @@ def sum_files(ddir,fbase,nfiles):
         base part of file name.
     nfiles : int
         number of runs for each file name.
-
+ 
     Returns
     -------
     dictionary of q, I, dI values.
 
     '''
+    print('summing {0}'.format(fbase))
     for fnum in range(nfiles):
         this_data = ddir+fbase+'_{0:05d}'.format(fnum+1)+'.dat'
         with open(this_data) as fdir:
@@ -143,6 +144,11 @@ def half(dset):
     #dIout = np.sqrt(dI[eve]**2 + dI[odd]**2)/2
     Iout,dIout = cmbwe(I[eve],dI[eve],I[odd],dI[odd])
     return {'q':qout, 'I':Iout, 'dI':dIout}
+
+def shorten(dset,nhalf):
+    for nit in range(nhalf):
+        dset = half(dset)
+    return dset
     
 def subtract_sets(set1,set2,SF=1):
     # SF is adjustable scale factor

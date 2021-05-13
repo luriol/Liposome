@@ -12,7 +12,8 @@ from lmfit.models import Model
 from lmfit import Parameters 
 import pandas as pd
 
-def saxsfit(q,W=4,sig=.3,d_H=0.5,d_M=0.5,I=10,A_H=70,A_T=-90,A_M=-50,R0=200,Rsig=50):
+def saxsfit(q,bgfun1,bgfun2,bg=0,bg1sf=1,bg2sf=0,W=4,sig=.3,d_H=0.5,d_M=0.5,I=1,A_H=70,
+            A_T=-90,A_M=-50,R0=200,Rsig=50,lbg=0,qbg=0):
     s1 = slab(A_H,-W/2,sig,'inner head')
     s2 = slab(A_T,-W/2+d_H,sig,'inner tail')
     s3 = slab(A_M,-d_M/2,sig,'methyl')
@@ -21,12 +22,14 @@ def saxsfit(q,W=4,sig=.3,d_H=0.5,d_M=0.5,I=10,A_H=70,A_T=-90,A_M=-50,R0=200,Rsig
     s6 = slab(-A_H,W/2,sig,'inner tail')
     P = profile([s1,s2,s3,s4,s5,s6])
     F = P.make_F_res(q,R0,Rsig)
-    # assume I in mg/ml liposome concentration
-    norm = 4.043e-12*I/W/R0
-    F = F*norm
+    # assume concentration = 10 mg/ml liposome concentration
+    # see documentation
+    norm = 3.2e-12*I*62**2/(R0**2+Rsig**2)
+    F = (F*norm+bgfun1*bg1sf+bgfun2*bg2sf + np.abs(bg)+np.abs(lbg)*q + 
+    +np.abs(qbg)*q**2)
     return F
 
-liposome_model = Model(saxsfit)
+liposome_model = Model(saxsfit,independent_vars=['q','bgfun1','bgfun2'])
 
 class slab:
     def __init__(self,amplitude,center,sigma,name):
@@ -166,98 +169,3 @@ class profile:
 
 
 
-def merge_data(x,y):
-    """
-    routine to merge identical x-data points so that data is single
-    valued
-    
-    returns, merged data and error bars, assuming multiple data points
-    at the same value combine with reduced errors
-    """
-    s = 0*x+1 #define error bars to all initially be equal to 1
-    xout = [x[0]]
-    yout = [y[0]]
-    sout = [s[0]]
-    for tx,ty,ts in zip(x[1:],y[1:],s[1:]):
-        if xout[-1] == tx:
-            yout[-1],sout[-1] = cmbwe(yout[-1],sout[-1],ty,ts)
-        else:
-            yout.append(ty)
-            sout.append(ts)
-            xout.append(tx)
-    xout = np.array(xout)
-    yout = np.array(yout)
-    sout = np.array(sout)   
-    return xout,yout,sout
-
-def half(dset):
-    q = dset['q']
-    I = dset['I']
-    dI = dset['dI']
-    wgi = np.where(~np.isnan(I))[0]
-    q = q[wgi]
-    I = I[wgi]
-    dI = dI[wgi]
-    nlen = int(2*np.floor(len(q)/2))
-    q = q[0:nlen]
-    q.shape
-    I = I[0:nlen]
-    dI = dI[0:nlen]
-    eve = np.arange(0,nlen,2).astype(int)
-    odd = np.arange(1,nlen,2).astype(int)
-    qout = (q[eve]+q[odd])/2
-    #Iout = (I[eve]+I[odd])/2
-    #dIout = np.sqrt(dI[eve]**2 + dI[odd]**2)/2
-    Iout,dIout = cmbwe(I[eve],dI[eve],I[odd],dI[odd])
-    return {'q':qout, 'I':Iout, 'dI':dIout}
-    
-def subtract_sets(set1,set2,SF=1):
-    # SF is adjustable scale factor
-    q = set2['q']
-    I2 = set2['I']
-    dI2 = set2['dI']
-    I1 = set1['I']
-    dI1 = set1['dI']
-    I = I1/SF-I2
-    dI = np.sqrt(dI1**2+dI2**2)
-    return {'q':q, 'I':I, 'dI':dI}
-
-
-def norm_fun(q,air,con,scale,lin,quad):
-    y = scale*air+con+lin*q+quad*q**2
-    return y
-
-norm_model = Model(norm_fun,independent_vars=['q','air'],
-                   param_names = ['con','scale','lin','quad'])               
-def trunc_set(set,start):
-    q = set['q'][start:]
-    I = set['I'][start:]
-    dI = set['dI'][start:]
-    return {'q':q, 'I':I, 'dI':dI}
-
-def get_SF(data,ref):
-    norm_par = Parameters()
-    norm_par.add('con',value=.1,vary=True,min=.05,max=.2)
-    norm_par.add('scale',value=10,vary=True,min=.9,max=1000)
-    norm_par.add('lin',value=0,vary=True,min=-10,max=10)
-    norm_par.add('quad',value=0,vary=True,min=-100,max=100)
-    q = ref['q'][0:12]
-    Ia = ref['I'][0:12]
-    Iw = data['I'][0:12]
-    wt = 1/Ia
-    result = norm_model.fit(Iw,norm_par,q=q,air=Ia,weights=wt)
-    return result.params['scale'].value
-
-def get_SF_tail(set1,set2):
-    I2 = set2['I']
-    I1 = set1['I']
-    R = I1/I2
-    NR = len(R)
-    R = R[int(.75*NR):]
-    R = np.sort(R)
-    R = R[0:5]
-    R = np.mean(R)
-    return R
-
-                       
-        
