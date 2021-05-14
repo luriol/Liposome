@@ -26,12 +26,16 @@ T = (273.15+23)*ur('kelvin')
 v = 1493.5932864269*ur('m/s')
 rho = 997.54049129117*ur('kg/m^3')
 #Find the compressibility from sound velocity and density
-kappa = (v**2*rho).to('GPa')
+chi = 1/((v**2*rho).to('GPa'))
 kappa_symbol = '\u03ba'
-print('water compressibility {0} = {1:4.2f~P}'.format(kappa_symbol,kappa))
+chi_symbol = '\u03c7'
+print('water compressibility {0} = {1:4.2f~P}'.format(chi_symbol,chi))
 # Calculate scattering cross section
-sig = rhoe**2*ur('k')*T*ur('r_e')**2/kappa
+sig = rhoe**2*ur('k')*T*ur('r_e')**2*chi
 print('water cross section = {0:7.3e~P}'.format(sig.to('cm^-1')))
+#%% calculate water S(Q) for comparison with theory
+S = (rhoe/Z)*chi*ur('k')*T
+print('water structure factor {0:7.3e~P}'.format(S.to('dimensionless')))
 #%%
 #Now sum  exerimental data for water and empty capillary
 ddir = 'C:\\Users\\lluri\\Dropbox\\Runs\\2021\\March 2021 Liposomes\\Data\\SAXS\\Averaged\\'
@@ -51,6 +55,51 @@ print('average of water diffuse {0:7.3f}'.format(wave))
 # scattering units based on the water cross section
 norm = sig.to('cm^-1').magnitude/wave
 print('normalization factor {0:7.3e}'.format(norm))
+#%%
+# we can also estimate the theoretical normalization
+Cj = 200*ur('microA/V')/(100*ur('kHz/V'))/(1*ur('e'))
+Ephot = 12*ur('keV')
+Epair = 3.65*ur('eV')
+Npairs = Ephot/Epair
+Cj /= Npairs
+print('Calculated Cj = {0:7.3e~P}'.format(Cj.to('dimensionless')))
+dOmega = (0.146/2269)**2
+Lambda = 0.15*ur('cm') # sample thickness
+#%% Estimate the normalization constant from the data
+I = (water['I']-air['I'])
+q = water['q']
+dI = np.sqrt(water['dI']**2+air['dI']**2)
+rr = (q>.1)*(q<6)
+I = I[rr]
+dI = dI[rr]
+q = q[rr]
+plt.figure('photon flux')
+plt.clf()
+plt.plot(q,I**2/dI**2)
+plt.yscale('log')
+plt.figure('raw counts')
+plt.clf()
+plt.plot(q,I)
+plt.yscale('log')
+# plot gives 17,000 photons at q=3.  Now, this number is total photons
+# in that bin, so photons per pixel is around 10^3 less
+Iraw = 17000.0
+npring = 1000
+ppix = Iraw/npring
+I0 = 4e11
+# raw counts per pixel around q = 3 inv. nm. is 0.09 
+N = .09
+#so N = Cj*ppix/I0, Cj = N*I0/ppix
+Cj = (N*I0/ppix)*ur('dimensionless')
+print('Cj  from I^2/dI^2 {0:7.3e~P}'.format(Cj))
+#%%
+# put in alternate value of Cj from comparint I to dI
+k = 1/(Lambda*dOmega*Cj)
+print('photons/ct = {0:7.3e}'.format(Cj.to_base_units()))
+Jt = 288644.200
+It = (Jt*Cj).to('dimensionless')
+print('Estimated transmitted flux {0:7.3e~P}'.format(It))
+print('theoretical conversion factor {0:7.3e~P}'.format(k.to('cm^-1')))
 #%%
 # Plot the normalized scattering from water
 plt.figure('normalized')
