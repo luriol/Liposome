@@ -69,18 +69,21 @@ for dind, dsetname in enumerate(data.keys()):
         par.add('I',value=1,vary=True,min=.1,max=10)
         par.add('R0',value=aux_data[dsetname]['R'],vary=False,min=40,max=70)
         par.add('Rsig',value=aux_data[dsetname]['dR'],vary=False,min=.25*40,max=.25*70)
+        par.add('W_asym',value=0,vary=True,min=-1,max=1)
+        par.add('A_T_asym',value=0,vary=True,min=-1,max=1)
         #%%
         # extract intensity from data structure for fitting
         q = fitset['q']
         I = fitset['I']
         bgfun1 = water['I']
         bgfun2 = air['I']
-        w = 1/np.sqrt(fitset['dI']**2 + water['dI']**2)
+        w = np.zeros(len(fitset['dI']))            
         # Truncate the data range so as not to fit below qmin and above qmax
         qmin = .1
         qmax = 6
-        w[q<qmin] = 0
-        w[q>qmax] = 0
+        rr = (q>qmin)*(q<qmax)
+        w[rr] = 1/np.sqrt(fitset['dI'][rr]**2 + water['dI'][rr]**2)
+        w[1^rr] = 0
         #%% plot the fit results
         # choose fit method, least squares = 1, differential evolution =0
         # least squares is faster, but less accurate
@@ -91,12 +94,13 @@ for dind, dsetname in enumerate(data.keys()):
                         bgfun2=bgfun2,weights=w)
         else:
             psize = 64
-            print('running differential evolution fit')
+            print('running differential evolution fit ')
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w,
                         method='differential_evolution',
                         fit_kws={'maxfev':20000,'popsize':psize}
                         )
+            print('Finished fit #2 redchi = {0:7.2f}'.format(result.redchi))
         fit_results = result.fit_report()
         print(fit_results)
         #%%
@@ -170,6 +174,13 @@ multi_name = 'liposome_multi_fit_results'+timestring+'.npy'
 with open('Results\\'+multi_name,'wb') as fd:
     np.save(fd,multi_results,allow_pickle=True)
 #%%
+# reload mult-results file and restore
+#%%
+timestring = '305970' # option to enter timestring by hand
+multi_name = 'liposome_multi_fit_results'+timestring+'.npy'
+with open('Results\\'+multi_name,'rb') as fd:
+    multi_results = np.load(fd,allow_pickle=True)[()]
+#%%
 # collect summary results
 sigs = np.array([])
 dsigs = np.array([])
@@ -177,7 +188,10 @@ Ws = np.array([])
 dWs = np.array([])
 chi2 = np.array([])
 Cf = np.array([])
-#Cf = np.array([0.2, 0.33, 0.4, 0.5, 0.6, 0, 0.2, 0.6, 0.5, 0.4, 0.33])
+W_asym = np.array([])
+dW_asym = np.array([])
+A_T_asym = np.array([])
+dA_T_asym = np.array([])
 for tout in multi_results:
     tdic = multi_results[tout]
     result=tdic['result']
@@ -188,22 +202,40 @@ for tout in multi_results:
     dsigs = np.append(dsigs,params['sig'].stderr)
     dWs = np.append(dWs,params['W'].stderr)
     Cf  = np.append(Cf,tdic['aux_data']['cfrac'])
+    W_asym = np.append(W_asym,params['W_asym'].value)
+    dW_asym = np.append(dW_asym,params['W_asym'].stderr)
+    A_T_asym = np.append(A_T_asym,params['A_T_asym'].value)
+    dA_T_asym = np.append(dA_T_asym,params['A_T_asym'].stderr)
 plt.figure('Ws')
 plt.clf()
-gg = chi2<2
+chi2lim = .9
+gg = chi2<chi2lim
 plt.errorbar(Cf[gg],Ws[gg],dWs[gg],fmt='ks')
 plt.xlabel('cholesterol fraction')
 plt.ylabel('bilayer thickness')
-plt.savefig('Results\\'+'thickness.png')
+plt.savefig('Results\\'+timestring+'thickness.png')
+
 plt.figure('sigs')
 plt.clf()
 plt.errorbar(Cf[gg],sigs[gg],dsigs[gg],fmt='ks')
 plt.xlabel('cholesterol fraction')
 plt.ylabel('bilayer roughness')
-plt.savefig('Results\\'+'roughness.png')
+plt.savefig('Results\\'+timestring+'roughness.png')
+
 plt.figure('chi2')
 plt.clf()
-plt.plot(Cf,chi2,'ks')
+plt.plot(Cf[gg],chi2[gg],'ks')
 plt.xlabel('cholesterol fraction')
 plt.ylabel('fit chi-squared (reduced) ')
-plt.savefig('Results\\'+'redchi.png')
+plt.savefig('Results\\'+timestring+'redchi.png')
+
+plt.figure('asymmetry')
+plt.clf()
+plt.errorbar(Cf[gg],W_asym[gg],dW_asym[gg],fmt='ks',label='width asymmetry')
+plt.errorbar(Cf[gg],A_T_asym[gg],dA_T_asym[gg],fmt='ro',label='Amplitude asymmetry')
+plt.xlabel('cholesterol fraction')
+plt.ylabel('fit asymmetry parameter ')
+plt.legend()
+plt.savefig('Results\\'+timestring+'asymmetry.png')
+
+
