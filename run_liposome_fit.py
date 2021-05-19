@@ -16,7 +16,6 @@ from liposome_sum_code import shorten
 import numpy as np
 from lmfit import Parameters
 from copy import copy
-from datetime import datetime
 import os
 import time
 #%%
@@ -42,7 +41,9 @@ aux_data = {'egg4_chol1_200_a':{'cfrac':0.2,'R':200,'dR':60},
 #%%
 multi_results = {}
 for dind, dsetname in enumerate(data.keys()):
-    if dsetname not in ['water_c','aircap_c']:
+    #selection = 1 # select all sets
+    selection = (dsetname in  ['eggPC_50_d'])
+    if (dsetname not in ['water_c','aircap_c'] and selection):
         print('{0:20s}\t{1}'.format(dsetname,dind))
         #%%
         # shorten datasets and backgrounds
@@ -54,9 +55,9 @@ for dind, dsetname in enumerate(data.keys()):
         ''' Initialize the parameters for the fit.
         '''
         par = Parameters()
-        par.add('bg1sf',value=1.05,vary=True,min=.5,max=1.5) # optional linear background, not used
-        par.add('bg2sf',value=.05,vary=True,min=-1,max=1) # optional quadratic background, not used
-        par.add('bg',value=0.002,vary=True,min=0,max=.01)
+        par.add('bg1sf',value=1.05,vary=True,min=.25,max=4) # optional linear background, not used
+        par.add('bg2sf',value=0,vary=False,min=-.1,max=.1) # optional quadratic background, not used
+        par.add('bg',value=0,vary=False,min= -.001,max=.001)
         par.add('lbg',value=0.000,vary=False,min=-.1,max=.1)
         par.add('qbg',value=0.000,vary=False,min=-1,max=1)
         par.add('W',value=4.37,vary=True,min=3,max=6)
@@ -69,8 +70,8 @@ for dind, dsetname in enumerate(data.keys()):
         par.add('I',value=1,vary=True,min=.1,max=10)
         par.add('R0',value=aux_data[dsetname]['R'],vary=False,min=40,max=70)
         par.add('Rsig',value=aux_data[dsetname]['dR'],vary=False,min=.25*40,max=.25*70)
-        par.add('W_asym',value=0,vary=True,min=-1,max=1)
-        par.add('A_T_asym',value=0,vary=True,min=-1,max=1)
+        par.add('W_asym',value=0,vary=False,min=-1,max=1)
+        par.add('A_T_asym',value=0,vary=False,min=-1,max=1)
         #%%
         # extract intensity from data structure for fitting
         q = fitset['q']
@@ -79,10 +80,11 @@ for dind, dsetname in enumerate(data.keys()):
         bgfun2 = air['I']
         w = np.zeros(len(fitset['dI']))            
         # Truncate the data range so as not to fit below qmin and above qmax
-        qmin = .1
+        qmin = .4
         qmax = 6
         rr = (q>qmin)*(q<qmax)
         w[rr] = 1/np.sqrt(fitset['dI'][rr]**2 + water['dI'][rr]**2)
+        #w[rr] = 1/fitset['dI'][rr]**2 
         w[1^rr] = 0
         #%% plot the fit results
         # choose fit method, least squares = 1, differential evolution =0
@@ -93,7 +95,7 @@ for dind, dsetname in enumerate(data.keys()):
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w)
         else:
-            psize = 64
+            psize = 4
             print('running differential evolution fit ')
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w,
@@ -121,16 +123,53 @@ for dind, dsetname in enumerate(data.keys()):
         nullbg2 = copy(bgfun2)*0
         bgfit = liposome_model.eval(bgpar,bgfun1 = nullbg1,bgfun2=nullbg2,q=q)
         #%%
+        # plot data without background subrtaction
+        plt.figure('Fit_And_Background')
+        plt.clf()
+        plt.errorbar(q[rr],I[rr],1/w[rr],fmt='-k',label='data')
+        yfit = result.eval(q=q[rr],bgfun1 = bgfun1[rr],bgfun2=bgfun2[rr])
+        plt.plot(q[rr],yfit,'--r',label='fit')
+        bgdata = I -bg  - lbg*q - qbg*q**2-bgfun1*bg1sf-bgfun2*bg2sf
+        if (bg != 0):
+            plt.plot(q[rr],bg+q[rr]*0,'-g',label = 'constant background')
+        if (lbg != 0):
+            plt.plot(q[rr],lbg*q[rr],'--g',label = 'linear background')
+        if (qbg != 0):
+            plt.plot(q[rr],qbg*q[rr]**2,'-.g', label = 'quadratic background')
+        plt.plot(q[rr],bgfun1[rr]*bg1sf,'-m',label = 'water background')
+        if (bg2sf != 0):
+            plt.plot(q[rr],bgfun2[rr]*bg2sf,'-c', label = 'air background')
+        plt.yscale('log')
+        plt.ylim(0.03,.05)
+        plt.title(dsetname)
+        plt.xlabel('q (nm${-1}$)')
+        plt.ylabel(r'$\frac{1}{V}\frac{d\Sigma}{d\Omega}$ (cm $^{-1}$)')
+        plt.legend()
+        plt.show()
+        #%%
         # plot background subtracted data - fit
         plt.figure('Fit_Minus_Background')
         plt.clf()
-        plt.errorbar(q,bgdata,fitset['dI'],fmt='ks',label='data')
-        plt.plot(q,bgfit,'-r',label='fit')
+        plt.errorbar(q[rr],bgdata[rr],1/w[rr],fmt='ks',label='data')
+        plt.plot(q[rr],bgfit[rr],'-r',label='fit')
         plt.yscale('log')
         plt.ylim(0.000001,.2)
         plt.title(dsetname)
         plt.xlabel('q (nm${-1}$)')
         plt.ylabel(r'$\frac{1}{V}\frac{d\Sigma}{d\Omega}$ (cm $^{-1}$)')
+        plt.legend()
+        plt.show()
+        #%%
+        # Plot residuals
+        plt.figure('Fractional_Residuals')
+        plt.clf()
+        resid = (I[rr]-yfit)/yfit
+        plt.errorbar(q[rr],resid,1/w[rr]/yfit,fmt='ks',label='data')
+        plt.yscale('linear')
+        plt.ylim(-.02,.02)
+        plt.title(dsetname)
+        plt.xlabel('q (nm${-1}$)')
+        plt.ylabel('fractional residuals')
         plt.legend()
         plt.show()
         #%%
@@ -153,8 +192,12 @@ for dind, dsetname in enumerate(data.keys()):
             os.makedirs('Results\\{0:s}'.format(dsetname))
         dname = 'Results\\{0:s}\\{1:s}\\'.format(dsetname,timestring)
         os.makedirs(dname)
+        plt.figure('Fit_And_Background')
+        plt.savefig(dname+'Fit_and_Background')
+        plt.figure('Fractional_Residuals')
+        plt.savefig(dname+'Fractional_residuals')
         plt.figure('Fit_Minus_Background')
-        plt.savefig(dname+'Fit_minus_background')
+        plt.savefig(dname+'Fit_Minus_Background')
         plt.figure('Real_Space_Fit')
         plt.savefig(dname +'Real_Space_Fit')
         with open(dname +'Fit_Results.txt','w') as fd:
@@ -162,7 +205,7 @@ for dind, dsetname in enumerate(data.keys()):
         outdata = {'water':water,'air':air,
                        'result':result,'Profile':P3,'qmin':qmin,
                        'qmax':qmax,'fitset':fitset,
-                       'dsetname':dsetname,
+                       'dsetname':dsetname,'psize':psize,
                        'aux_data':aux_data[dsetname]}
         with open(dname +'Fit_Data.npy','wb') as fd:
             np.save(fd,outdata,allow_pickle=True)
@@ -176,7 +219,7 @@ with open('Results\\'+multi_name,'wb') as fd:
 #%%
 # reload mult-results file and restore
 #%%
-timestring = '305970' # option to enter timestring by hand
+#timestring = '305970' # option to enter timestring by hand
 multi_name = 'liposome_multi_fit_results'+timestring+'.npy'
 with open('Results\\'+multi_name,'rb') as fd:
     multi_results = np.load(fd,allow_pickle=True)[()]
