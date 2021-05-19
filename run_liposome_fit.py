@@ -41,8 +41,8 @@ aux_data = {'egg4_chol1_200_a':{'cfrac':0.2,'R':200,'dR':60},
 #%%
 multi_results = {}
 for dind, dsetname in enumerate(data.keys()):
-    #selection = 1 # select all sets
-    selection = (dsetname in  ['eggPC_50_d'])
+    selection = 1 # select all sets
+    selection = (dsetname in  ['egg3_chol2_50_a'])
     if (dsetname not in ['water_c','aircap_c'] and selection):
         print('{0:20s}\t{1}'.format(dsetname,dind))
         #%%
@@ -81,10 +81,10 @@ for dind, dsetname in enumerate(data.keys()):
         w = np.zeros(len(fitset['dI']))            
         # Truncate the data range so as not to fit below qmin and above qmax
         qmin = .4
-        qmax = 6
+        qmax = 7.5
         rr = (q>qmin)*(q<qmax)
         w[rr] = 1/np.sqrt(fitset['dI'][rr]**2 + water['dI'][rr]**2)
-        #w[rr] = 1/fitset['dI'][rr]**2 
+        w[rr] = 1/fitset['dI'][rr]**2 
         w[1^rr] = 0
         #%% plot the fit results
         # choose fit method, least squares = 1, differential evolution =0
@@ -99,8 +99,8 @@ for dind, dsetname in enumerate(data.keys()):
             print('running differential evolution fit ')
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w,
-                        method='differential_evolution',
-                        fit_kws={'maxfev':20000,'popsize':psize}
+                        method='differential_evolution',max_nfev=200000,
+                        fit_kws={'popsize':psize}
                         )
             print('Finished fit #2 redchi = {0:7.2f}'.format(result.redchi))
         fit_results = result.fit_report()
@@ -219,7 +219,7 @@ with open('Results\\'+multi_name,'wb') as fd:
 #%%
 # reload mult-results file and restore
 #%%
-#timestring = '305970' # option to enter timestring by hand
+#timestring = '436565' # option to enter timestring by hand
 multi_name = 'liposome_multi_fit_results'+timestring+'.npy'
 with open('Results\\'+multi_name,'rb') as fd:
     multi_results = np.load(fd,allow_pickle=True)[()]
@@ -251,7 +251,7 @@ for tout in multi_results:
     dA_T_asym = np.append(dA_T_asym,params['A_T_asym'].stderr)
 plt.figure('Ws')
 plt.clf()
-chi2lim = .9
+chi2lim = 5
 gg = chi2<chi2lim
 plt.errorbar(Cf[gg],Ws[gg],dWs[gg],fmt='ks')
 plt.xlabel('cholesterol fraction')

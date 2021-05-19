@@ -100,6 +100,45 @@ def sum_files(ddir,fbase,nfiles):
     yout = {'q':qout, 'I':iout, 'dI':diout}
     return yout
 
+def cmb_set(s1,s2):
+    yin1 = s1['I']
+    ein1 = s1['dI']
+    yin2 = s2['I']
+    ein2 = s2['dI']
+    yout,sout = cmbwe(yin1,ein1,yin2,ein2)
+    return {'q':s1['q'],'I':yout,'dI':sout}
+
+def deglitch(ds1,ds2,cut):
+    i1 = ds1['I']
+    i2 = ds2['I']
+    e1 = ds1['dI']
+    e2 = ds2['dI']
+    y = 2*(i1-i2)/(i1+i2)
+    rr = y > cut
+    for inum, bval in enumerate(rr):
+        if bval:
+            i1[inum]=i2[inum]
+            e1[inum]=e2[inum]       
+    return {'q':ds1['q'],'I':i1,'dI':e1}
+
+def sum_files_glitch(ddir,fbase,nfiles):
+    cut = 0.1
+    da = []
+    for fnum in range(nfiles):
+        this_data = ddir+fbase+'_{0:05d}'.format(fnum+1)+'.dat'
+        with open(this_data) as fdir:
+            data = pd.read_csv(fdir,header=0,skiprows=12,delimiter='\t',names=['q','I','dI'])
+            qout = data['q'].to_numpy()*10 # convert from inv. ang. to inv. nm
+            iout = data['I'].to_numpy()
+            diout = data['dI'].to_numpy()
+            dstruc = {'q':qout,'I':iout,'dI':diout}
+        da.append(dstruc)
+    for fnum in range(nfiles):
+        if fnum == 0:
+            sum = deglitch(da[2],da[0],cut)
+        else:
+            sum = cmb_set(sum,deglitch(da[fnum],da[fnum-1],cut))
+    return(sum)
 def merge_data(x,y):
     """
     routine to merge identical x-data points so that data is single

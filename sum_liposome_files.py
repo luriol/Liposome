@@ -15,7 +15,7 @@ second time
 
 import numpy as np
 from matplotlib import pyplot as plt
-from liposome_sum_code import find_file, sum_files
+from liposome_sum_code import find_file, sum_files_glitch
 
 
 
@@ -44,7 +44,7 @@ for this_set in all_sets:
     for tnam in this_set:
         print('summing {0}'.format(tnam))
         tfn = find_file(ddir,tnam)
-        data_sets[tnam] = sum_files(ddir,tfn,nfiles)
+        data_sets[tnam] = sum_files_glitch(ddir,tfn,nfiles)
         data_sets[tnam]['I'] *=norm
         data_sets[tnam]['dI'] *= norm
 savename = 'liposome_data.npy'
