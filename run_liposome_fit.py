@@ -55,23 +55,42 @@ for dind, dsetname in enumerate(data.keys()):
         ''' Initialize the parameters for the fit.
         '''
         par = Parameters()
-        par.add('bg1sf',value=1.05,vary=True,min=.25,max=4) # optional linear background, not used
-        par.add('bg2sf',value=0,vary=False,min=-.1,max=.1) # optional quadratic background, not used
-        par.add('bg',value=0,vary=False,min= -.001,max=.001)
-        par.add('lbg',value=0.000,vary=False,min=-.1,max=.1)
-        par.add('qbg',value=0.000,vary=False,min=-1,max=1)
-        par.add('W',value=4.37,vary=True,min=3,max=6)
-        par.add('d_H',value=.609,vary=False,min=.3,max=.9)
-        par.add('d_M',value=.1,vary=True,min=0.05,max=.15)
-        par.add('A_H',value=70,vary=False,min=50,max=90)  # since scale factor is arbitrary, fix one value
-        par.add('A_T',value=-84.7,vary=True,min=-100,max=-50)
-        par.add('A_M',value=-333,vary=False,min=-334,max=-100) # fix methyl amplitude at -water value (e.g. assume 0)
-        par.add('sig',value=.3,vary=True,min=.2,max=.5)  
-        par.add('I',value=1,vary=True,min=.1,max=10)
-        par.add('R0',value=aux_data[dsetname]['R'],vary=False,min=40,max=70)
-        par.add('Rsig',value=aux_data[dsetname]['dR'],vary=False,min=.25*40,max=.25*70)
-        par.add('W_asym',value=0,vary=False,min=-1,max=1)
-        par.add('A_T_asym',value=0,vary=False,min=-1,max=1)
+        par.add('bg1sf',value=1.05,vary=True,min=.25,max=4) # scale factor for water background
+        par.add('bg2sf',value=0,vary=False,min=-.1,max=.1) # scale factor for air background (not used)
+        par.add('bg',value=0,vary=False,min= -.001,max=.001) # optional constant background (not used)
+        par.add('lbg',value=0.000,vary=False,min=-.1,max=.1) # optional linear background (not used)
+        par.add('qbg',value=0.000,vary=False,min=-1,max=1) # optional quadratic background (not used)
+        par.add('W',value=4.37,vary=True,min=3,max=6) # overall bilayer width
+        par.add('d_H',value=.609,vary=False,min=.3,max=.9) # head group thickness. 
+        par.add('d_M',value=.1,vary=True,min=0.05,max=.15) # Methyl group thickness
+        # note there is no parameter for tail group thickness.  This is calculated by subtracting 
+        # the other widths from the total bilayer width.
+        par.add('A_H',value=70,vary=False,min=50,max=90)  # The amplitude of the head group
+        # The fit is only sensative to the relative amplitudes of the layers, thus
+        # one amplitude factor is arbitrary, and should not be varied.  The 
+        # head group amplitude is thus fixed
+        par.add('A_T',value=-84.7,vary=True,min=-100,max=-50) # Tail group amplitude
+        par.add('A_M',value=-333,vary=False,min=-334,max=-100) # The methyl group  amplitude 
+        #is set to be -333, which is negative the electron density (in e-/nm^3)
+        #of water.  This is because water is the reference point for amplitudes
+        # (the bilayer is submerged in water).  An amplitude of -333 is equivilent
+        # to vaccum, so it is an overestimate, as the hydrogens in methyl have
+        # a small but nonzero electron density.  However, this is a reasonable 
+        # approximation, and since the roughness is typically large enough to no
+        # see this dip to high accuracy, it is good enough to just vary the thicknes
+        # of the methyl group. 
+        par.add('sig',value=.3,vary=True,min=.2,max=.5)  # bilayer roughness.  Right now all layers
+        # are fixed to hae the same roughness value
+        par.add('I',value=1,vary=True,min=.1,max=10) # Amplitude scale factor
+        par.add('R0',value=aux_data[dsetname]['R'],vary=False,min=40,max=70) # Bilayer radius
+        par.add('Rsig',value=aux_data[dsetname]['dR'],vary=False,min=.25*40,max=.25*70) #Bilayer variance in radius
+        # this is the polydispersity factor from DLS times R
+        par.add('W_asym',value=0,vary=False,min=-1,max=1) # Asymmetry factor for 
+        # bilayer, inner leaflet is larger than outer leaflet by approximately the  ratio
+        # 4W/pi
+        par.add('A_T_asym',value=0,vary=False,min=-1,max=1) # Asymmetry factor for amplitude of
+        #tail group.  The inner tailgroup is higher electron density than outer by a ration of approximately
+        # A_T_asym/4
         #%%
         # extract intensity from data structure for fitting
         q = fitset['q']
