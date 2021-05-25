@@ -167,8 +167,8 @@ class profile:
         A_M = par['A_M'].value
         W_asym = par['W_asym'].value
         A_T_asym = par['A_T_asym'].value
-        Wout = W*(.5-np.arctan(W_asym)/np.pi)
-        Win = W*(.5+np.arctan(W_asym)/np.pi)
+        Wout = W*(1-2*np.arctan(W_asym)/np.pi)
+        Win = W*(1+2*np.arctan(W_asym)/np.pi)
         A_T_out = A_T*(.5-np.arctan(A_T_asym)/np.pi)
         A_T_in = A_T*(.5+np.arctan(A_T_asym)/np.pi)
         self.slabs=[]
