@@ -110,14 +110,15 @@ class profile:
             f += slab.f_of_q(q,R)
         F = np.abs(f)**2
         return F
-    def draw_rho(self,offset=0,ymin =-9999,ymax=-9999,color='black'):
+    def draw_rho(self,offset=0,ymin =-9999,ymax=-9999,
+                 color='black',label='',linestyle='solid'):
         x = self.make_x()
         y = self.rho(x)+offset
         if ymin == -9999:
             ymin = min(y)
         if ymax == -9999:
             ymax = max(y)
-        plt.plot(x ,y, color = color)
+        plt.plot(x ,y, color = color, label = label,linestyle=linestyle)
         plt.xlabel('z [nm]')
         plt.ylabel('$\\rho$ (e$^-$/nm$^3$)')
         plt.title('density profile  ')

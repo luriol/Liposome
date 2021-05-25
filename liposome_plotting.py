@@ -89,19 +89,36 @@ def plot_final_results(pp,resultname):
     dW_asym = np.array([])
     A_T_asym = np.array([])
     dA_T_asym = np.array([])
-    for tout in multi_results_in:
+    plt.figure('real_space_plots')
+    plt.clf()
+    col = ['black','red','green','blue','cyan','magenta']
+    lsty = ['solid','dashed','dashdot','dotted']
+    ncol = len(col)
+    for nout, tout in enumerate(multi_results_in):
         tres = multi_results_in[tout]['result']
+        tsetname = multi_results_in[tout]['dsetname']
+        cfrac = multi_results_in[tout]['cfrac']
         params = tres.params  
         chi2 = np.append(chi2,tres.redchi)
         sigs = np.append(sigs,params['sig'].value)
         Ws = np.append(Ws,params['W'].value)
         dsigs = np.append(dsigs,params['sig'].stderr)
         dWs = np.append(dWs,params['W'].stderr)
-        Cf  = np.append(Cf,multi_results_in[tout]['cfrac'])
+        Cf  = np.append(Cf,cfrac)
         W_asym = np.append(W_asym,params['W_asym'].value)
         dW_asym = np.append(dW_asym,params['W_asym'].stderr)
         A_T_asym = np.append(A_T_asym,params['A_T_asym'].value)
         dA_T_asym = np.append(dA_T_asym,params['A_T_asym'].stderr)
+        P3 = profile([])
+        P3.load_par(params)
+        off = cfrac*200
+        P3.draw_rho(offset = 333.3+off, ymin = 300, 
+                    ymax = 525, color=col[nout%ncol],
+                    linestyle = lsty[int(nout/ncol)],label=tsetname)
+    plt.xlabel('distance [nm]')
+    plt.ylabel('electron density $e^-/nm^3$')
+    plt.legend()
+    plt.savefig(pp, format='pdf',bbox_inches='tight')
     plt.figure('Ws')
     plt.clf()
     chi2lim = 5
