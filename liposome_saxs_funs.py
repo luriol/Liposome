@@ -12,18 +12,18 @@ from lmfit.models import Model
 from lmfit import Parameters 
 import pandas as pd
 
-def saxsfit(q,bgfun1,bgfun2,bg=0,bg1sf=1,bg2sf=0,W=4,sig=.3,d_H=0.5,d_M=0.5,I=1,A_H=70,
-            A_T=-90,A_M=-50,R0=200,Rsig=50,lbg=0,qbg=0,W_asym=0,A_T_asym=0):
+def saxsfit(q,bgfun1,bgfun2,bg=0,bg1sf=1,bg2sf=0,W=4,sig=.3,d_H=0.5,d_M=0.5,I=1,A_H=107,
+            A_T=-90,A_M=-334,R0=200,Rsig=50,lbg=0,qbg=0,W_asym=0,A_T_asym=0):
     Wout = W*(1-2*np.arctan(W_asym)/np.pi)
     Win = W*(1+2*np.arctan(W_asym)/np.pi)
     A_T_out = A_T*(1-2*np.arctan(A_T_asym)/np.pi)
     A_T_in = A_T*(1+2*np.arctan(A_T_asym)/np.pi)
-    s1 = slab(A_H,-Win/2,sig,'inner head')
-    s2 = slab(A_T_in,-Win/2+d_H,sig,'inner tail')
-    s3 = slab(A_M,-d_M/2,sig,'methyl')
-    s4 = slab(-A_M,d_M/2,sig,'inner head')
-    s5 = slab(-A_T_out,Wout/2-d_H,sig,'outer tail')
-    s6 = slab(-A_H,Wout/2,sig,'outer head')
+    s1 = slab(A_H,-Win/2,sig,'water to inner head')
+    s2 = slab(A_T_in,-Win/2+d_H,sig,'inner head to inner tail')
+    s3 = slab(A_M,-d_M/2,sig,'inner tail methyl')
+    s4 = slab(-A_M,d_M/2,sig,'methyl to outer tail')
+    s5 = slab(-A_T_out,Wout/2-d_H,sig,'outer tail to outer head')
+    s6 = slab(-A_H,Wout/2,sig,'outer head to water')
     P = profile([s1,s2,s3,s4,s5,s6])
     #P.list_slabs()
     F = P.make_F_res(q,R0,Rsig)
@@ -58,7 +58,7 @@ class slab:
     def rho(self,x):
         xp = x-self.center
         arg = (xp/self.sigma)/np.sqrt(2)
-        rho = (erf(arg)/2+1)*self.amplitude
+        rho = (erf(arg)/2+1/2)*self.amplitude
         return rho     
     def draw_drho(self):
         x1 = self.center-4*self.sigma

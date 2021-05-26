@@ -42,6 +42,8 @@ aux_data = {'egg4_chol1_200_a':{'cfrac':0.2,'R':200,'dR':60},
             'egg2_chol1_50_a':{'cfrac':.33,'R':62,'dR':15},
             }
 #%%
+if not os.path.exists('Results'):
+    os.mkdir('Results')
 timestring = str(int(time.time()))[-6:]
 figname = 'Results/liposome_fit_results_'+timestring+'.pdf'
 resultname = 'Results/liposome_fit_results_'+timestring+'.npz'
@@ -62,17 +64,17 @@ for dind, dsetname in enumerate(data.keys()):
         #Initialize the parameters for the fit.
         #
         par = Parameters()
-        par.add('bg1sf',value=1.05,vary=True,min=.25,max=4) 
+        par.add('bg1sf',value=1.00,vary=True,min=.25,max=4) 
         par.add('bg2sf',value=0,vary=False,min=-.1,max=.1) 
         par.add('bg',value=0,vary=False,min= -.001,max=.001) 
         par.add('lbg',value=0.000,vary=False,min=-.1,max=.1) 
         par.add('qbg',value=0.000,vary=False,min=-1,max=1) 
         par.add('W',value=4.37,vary=True,min=3,max=6) 
-        par.add('d_H',value=.609,vary=False,min=.3,max=.9) 
+        par.add('d_H',value=.7,vary=False,min=.3,max=.9) 
         par.add('d_M',value=.1,vary=True,min=0.05,max=.15) 
-        par.add('A_H',value=70,vary=False,min=50,max=90)  
-        par.add('A_T',value=-84.7,vary=True,min=-100,max=-50)
-        par.add('A_M',value=-333,vary=False,min=-334,max=-100) 
+        par.add('A_H',value=107,vary=False,min=50,max=90)  
+        par.add('A_T',value=-84.7,vary=True,min=-200,max=0)
+        par.add('A_M',value=-334,vary=False,min=-335,max=-100) 
         par.add('sig',value=.3,vary=True,min=.2,max=.5)  
         par.add('I',value=1,vary=True,min=.1,max=10) 
         par.add('R0',value=aux_data[dsetname]['R'],vary=False,min=40,max=70) 
@@ -103,7 +105,7 @@ for dind, dsetname in enumerate(data.keys()):
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w)
         else:
-            psize = 4
+            psize = 16
             print('running differential evolution fit ')
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w,
