@@ -51,7 +51,7 @@ pp = PdfPages(figname)
 multi_results_out = {}
 for dind, dsetname in enumerate(data.keys()):
     selection = 1 # select all sets
-    #selection = (dsetname in  ['eggPC_50_d'])
+    #selection = (dsetname in  ['eggPC_50_d','egg2_chol3_50_b','egg4_chol1_200_a','egg1_chol1_200_a'])
     if (dsetname not in ['water_c','aircap_c'] and selection):
         print('{0:20s}\t{1}'.format(dsetname,dind))
         #%%
@@ -67,20 +67,20 @@ for dind, dsetname in enumerate(data.keys()):
         par.add('bg1sf',value=1.00,vary=True,min=.25,max=4) 
         par.add('bg2sf',value=0,vary=False,min=-.1,max=.1) 
         par.add('bg',value=0,vary=False,min= -.001,max=.001) 
-        par.add('lbg',value=0.000,vary=False,min=-.1,max=.1) 
-        par.add('qbg',value=0.000,vary=False,min=-1,max=1) 
+        par.add('lbg',value=0.000,vary=False,min=0,max=1e-4) 
+        par.add('qbg',value=0.000,vary=False,min=0,max=1e-4) 
         par.add('W',value=4.37,vary=True,min=3,max=6) 
         par.add('d_H',value=.7,vary=False,min=.3,max=.9) 
-        par.add('d_M',value=.1,vary=True,min=0.05,max=.15) 
+        par.add('d_M',value=0,vary=True,min=-.001,max=.15) 
         par.add('A_H',value=107,vary=False,min=50,max=90)  
-        par.add('A_T',value=-84.7,vary=True,min=-200,max=0)
+        par.add('A_T',value=-150,vary=True,min=-250,max=0)
         par.add('A_M',value=-334,vary=False,min=-335,max=-100) 
         par.add('sig',value=.3,vary=True,min=.2,max=.5)  
         par.add('I',value=1,vary=True,min=.1,max=10) 
-        par.add('R0',value=aux_data[dsetname]['R'],vary=False,min=40,max=70) 
-        par.add('Rsig',value=aux_data[dsetname]['dR'],vary=False,min=.25*40,max=.25*70) 
-        par.add('W_asym',value=0,vary=False,min=-1,max=1) 
-        par.add('A_T_asym',value=0,vary=False,min=-1,max=1) 
+        par.add('R0',value=aux_data[dsetname]['R'],vary=False,min=40,max=300) 
+        par.add('Rsig',value=aux_data[dsetname]['dR'],vary=False,min=.25*40,max=.25*300) 
+        par.add('W_asym',value=0,vary=True,min=-0.01,max=2) 
+        par.add('A_T_asym',value=0,vary=True,min=-1,max=1) 
         #%%
         # extract intensity from data structure for fitting
         q = fitset['q']
@@ -89,8 +89,8 @@ for dind, dsetname in enumerate(data.keys()):
         bgfun2 = air['I']
         w = np.zeros(len(fitset['dI']))            
         # Truncate the data range so as not to fit below qmin and above qmax
-        qmin = 0.5
-        qmax = 5.5
+        qmin = 0.3
+        qmax = 6
         rr = (q>qmin)*(q<qmax)
         w[rr] = 1/np.sqrt(fitset['dI'][rr]**2 + water['dI'][rr]**2 +
                           (0.001*fitset['I'][rr])**2)
@@ -105,7 +105,7 @@ for dind, dsetname in enumerate(data.keys()):
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w)
         else:
-            psize = 16
+            psize = 4
             print('running differential evolution fit ')
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w,
@@ -114,6 +114,9 @@ for dind, dsetname in enumerate(data.keys()):
                         )
             # append cholesterol fraction to result values
             result.values['cfrac'] = aux_data[dsetname]['cfrac']
+            result.values['psize'] = psize
+            result.values['qmin'] = qmin
+            result.values['qmax'] = qmax
             print('Finished fit #2 redchi = {0:7.2f}'.format(result.redchi))
             multi_results_out[dsetname] = {'result':result,
                 'cfrac':aux_data[dsetname]['cfrac'],'dsetname':dsetname}

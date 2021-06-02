@@ -20,7 +20,7 @@ def make_plots(pp,result,dsetname):
     ax.text(.02,.02,fit_results,fontsize='x-small')
     ax.text(.75,.9,dsetname,fontsize='large')
     ax.axis('off')
-    fig.show()
+    #fig.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #
     # Second figure background subtracted data
@@ -45,7 +45,7 @@ def make_plots(pp,result,dsetname):
     plt.xlabel('q (nm${-1}$)')
     plt.ylabel(r'$\frac{1}{V}\frac{d\Sigma}{d\Omega}$ (cm $^{-1}$)')
     plt.legend()
-    plt.show()
+    #plt.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     # #%%
     # Plot residuals
@@ -59,7 +59,7 @@ def make_plots(pp,result,dsetname):
     plt.xlabel('q (nm${-1}$)')
     plt.ylabel('residuals')
     plt.legend()
-    plt.show()
+    #plt.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     # #%%
     #plot the profile in real space corresponding to the fit
@@ -69,16 +69,33 @@ def make_plots(pp,result,dsetname):
     P3.load_par(result.params)
     P3.draw_rho(offset = 333.3, ymin = 0, ymax = 450, color='blue')
     plt.title(dsetname)
-    plt.show()
+    #plt.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #%%
-
+def key_plot(Cf,y,dy,Rs,chi2,rlim,chi2lim):
+    gg1 = (chi2<chi2lim)*(Rs<rlim)
+    gg2 = (chi2>chi2lim)*(Rs<rlim)
+    gg3 = (chi2<chi2lim)*(Rs>rlim)
+    gg4 = (chi2>chi2lim)*(Rs>rlim)
+    if (sum(gg1)>0):
+        plt.errorbar(Cf[gg1],y[gg1],dy[gg1],fmt='ks',
+                label='R < {0:d} chi2 < {1:d}'.format(rlim,chi2lim))
+    if (sum(gg2)>0):
+        plt.errorbar(Cf[gg2],y[gg2],dy[gg2],fmt='ko',
+                label='R < {0:d} chi2 > {1:d}'.format(rlim,chi2lim))    
+    if (sum(gg3)>0):
+        plt.errorbar(Cf[gg3],y[gg3],dy[gg3],fmt='rs',
+                label='R > {0:d} chi2 < {1:d}'.format(rlim,chi2lim))  
+    if (sum(gg4)>0):
+        plt.errorbar(Cf[gg4],y[gg4],dy[gg4],fmt='ro',
+                label='R > {0:d} chi2 > {1:d}'.format(rlim,chi2lim))
 def plot_final_results(pp,resultname):
     # reload mult-results file and restore
     with open(resultname,'rb') as fd:
         multi_results_in = np.load(fd,allow_pickle=True)[()]
     #%%
     # collect summary results
+    Rs = np.array([])
     sigs = np.array([])
     dsigs = np.array([])
     Ws = np.array([])
@@ -94,6 +111,8 @@ def plot_final_results(pp,resultname):
     col = ['black','red','green','blue','cyan','magenta']
     lsty = ['solid','dashed','dashdot','dotted']
     ncol = len(col)
+    
+
     for nout, tout in enumerate(multi_results_in):
         tres = multi_results_in[tout]['result']
         tsetname = multi_results_in[tout]['dsetname']
@@ -101,6 +120,7 @@ def plot_final_results(pp,resultname):
         params = tres.params  
         chi2 = np.append(chi2,tres.redchi)
         sigs = np.append(sigs,params['sig'].value)
+        Rs = np.append(Rs,params['R0'].value)
         Ws = np.append(Ws,params['W'].value)
         dsigs = np.append(dsigs,params['sig'].stderr)
         dWs = np.append(dWs,params['W'].stderr)
@@ -116,41 +136,51 @@ def plot_final_results(pp,resultname):
                     ymax = 525, color=col[nout%ncol],
                     linestyle = lsty[int(nout/ncol)],label=tsetname)
     plt.xlabel('distance [nm]')
-    plt.ylabel('electron density $e^-/nm^3$')
-    plt.legend()
+    plt.ylabel('electron density $e^-/$nm$^3$')
+    plt.legend(loc=(1.04,0))
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     plt.figure('Ws')
     plt.clf()
-    chi2lim = 5
-    gg = chi2<chi2lim
-    plt.errorbar(Cf[gg],Ws[gg],dWs[gg],fmt='ks')
+    chi2lim = 2
+    rlim = 100
+    key_plot(Cf,Ws,dWs,Rs,chi2,rlim,chi2lim)
     plt.xlabel('cholesterol fraction')
     plt.ylabel('bilayer thickness')
+    plt.legend(loc=(1.04,0))
     plt.savefig(pp, format='pdf',bbox_inches='tight')
+    
+    
     #plt.savefig('Results\\'+timestring+'thickness.png')
     plt.figure('sigs')
     plt.clf()
-    plt.errorbar(Cf[gg],sigs[gg],dsigs[gg],fmt='ks')
+    key_plot(Cf,sigs,dsigs,Rs,chi2,rlim,chi2lim)
     plt.xlabel('cholesterol fraction')
     plt.ylabel('bilayer roughness')
+    plt.legend(loc=(1.04,0))
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #plt.savefig('Results\\'+timestring+'roughness.png')
     
     plt.figure('chi2')
     plt.clf()
-    plt.plot(Cf[gg],chi2[gg],'ks')
+    gg1 = Rs<rlim
+    gg2 = Rs>rlim
+    if sum(gg1)>1:
+        plt.plot(Cf[gg1],chi2[gg1],'ks',label='R0 < {0:4.1f}'.format(rlim))
+    if sum(gg2)>1:
+        plt.plot(Cf[gg2],chi2[gg2],'rs',label='R0 > {0:4.1f}'.format(rlim))
     plt.xlabel('cholesterol fraction')
     plt.ylabel('fit chi-squared (reduced) ')
+    plt.legend(loc=(1.04,0))
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #plt.savefig('Results\\'+timestring+'redchi.png')
     
     plt.figure('asymmetry')
     plt.clf()
-    plt.errorbar(Cf[gg],W_asym[gg],dW_asym[gg],fmt='ks',label='width asymmetry')
-    plt.errorbar(Cf[gg],A_T_asym[gg],dA_T_asym[gg],fmt='ro',label='Amplitude asymmetry')
+    key_plot(Cf,W_asym,dW_asym,Rs,chi2,rlim,chi2lim)
+    plt.legend()
     plt.xlabel('cholesterol fraction')
     plt.ylabel('fit asymmetry parameter ')
-    plt.legend()
+    plt.legend(loc=(1.04,0))
     plt.savefig(pp, format='pdf',bbox_inches='tight')
 
     
