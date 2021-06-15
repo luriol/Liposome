@@ -72,9 +72,9 @@ for dind, dsetname in enumerate(data.keys()):
         par.add('W',value=4.37,vary=True,min=3,max=6) 
         par.add('d_H',value=.7,vary=False,min=.3,max=.9) 
         par.add('d_M',value=0,vary=True,min=-.001,max=.15) 
-        par.add('A_H',value=107,vary=False,min=50,max=90)  
+        par.add('A_H',value=107,vary=False,min=50,max=200)
         par.add('A_T',value=-150,vary=True,min=-250,max=0)
-        par.add('A_M',value=-334,vary=False,min=-335,max=-100) 
+        par.add('A_M',value=-334,vary=False,min=-335,max=0) 
         par.add('sig',value=.3,vary=True,min=.2,max=.5)  
         par.add('I',value=1,vary=True,min=.1,max=10) 
         par.add('R0',value=aux_data[dsetname]['R'],vary=False,min=40,max=300) 
@@ -105,7 +105,7 @@ for dind, dsetname in enumerate(data.keys()):
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w)
         else:
-            psize = 4
+            psize = 64
             print('running differential evolution fit ')
             result = liposome_model.fit(I,par,q=q,bgfun1 = bgfun1,
                         bgfun2=bgfun2,weights=w,
