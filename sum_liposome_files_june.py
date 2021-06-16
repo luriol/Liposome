@@ -19,11 +19,11 @@ from liposome_sum_code import find_file, sum_files_glitch
 
 
 names = ['DPPC_30_RT_1','DPPC_50_RT_1','DPPC_100_RT_1',
-15         'water2','DPPC_200_RT_1','water1']
+        'water2','DPPC_200_RT_1','water1']
 
 
-
-ddir = 'C:\\Users\\lluri\\Dropbox\\Runs\\2021\\June 2021 Liposomes\\Data\\SAXS\\Averaged\\'
+dhead = 'C:\\Users\\lluri\\Dropbox\\Runs\\2021\\'
+ddir = dhead + 'June 2021 Liposomes\\SAXS\\Averaged\\'
 nfiles = 30
 data_sets = {}
 all_sets = [names]

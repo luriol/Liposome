@@ -200,6 +200,3 @@ def subtract_sets(set1,set2,SF=1):
     dI = np.sqrt(dI1**2+dI2**2)
     return {'q':q, 'I':I, 'dI':dI}
 
-
-
-
