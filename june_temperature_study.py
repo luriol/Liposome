@@ -28,7 +28,7 @@ n1 = np.mean(water['I'][(water['q']>3)*(water['q']<5)])
 plt.figure('DPPC_data')
 plt.clf()
 for t in range(370,470,5):
-    tnam = 'DPPC_50_C_{0:3d}'.format(t)
+    tnam = 'DPPC_50_B_{0:3d}'.format(t)
     tfn = find_file(ddir,tnam)
 
     dppc = shorten(sum_files_glitch(ddir,tfn,nfiles),4)
