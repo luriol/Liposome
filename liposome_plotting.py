@@ -23,7 +23,41 @@ def make_plots(pp,result,dsetname):
     #fig.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #
-    # Second figure background subtracted data
+    # Second figure plot data and background
+    #
+    vals = result.values
+    q = result.userkws['q']
+    bgfun1 = result.userkws['bgfun1']
+    bgfun2 = result.userkws['bgfun2']
+    bg = (vals['bg'] + q*vals['lbg'] +
+        q**2*vals['qbg'] + 
+        bgfun1*vals['bg1sf'] +
+        bgfun2*vals['bg2sf'])
+    data = result.data
+    fit = result.best_fit
+    plt.figure('Fit_with_bg')
+    plt.clf()
+    w = result.weights>0
+    plt.errorbar(q[w],data[w],1/result.weights[w],fmt='-k',label='data')
+    plt.plot(q[w],fit[w],'-r',label='fit')
+    #plt.plot(q[w], bgfun1[w]*vals['bg1sf'],'-b',label='water')
+    #plt.plot(q[w], bgfun2[w]*vals['bg2sf'],'-g',label='glass')
+    bg = (vals['bg'] + q*vals['lbg'] +
+     q**2*vals['qbg'] + 
+     bgfun1*vals['bg1sf'] +
+     bgfun2*vals['bg2sf'])
+    plt.plot(q[w], bg[w],'--k',label='total bg')
+    plt.yscale('linear')
+    plt.xscale('linear')
+    plt.ylim(.0325,.07)
+    plt.title(dsetname) 
+    plt.xlabel('q (nm$^{-1}$)')
+    plt.ylabel(r'$\frac{1}{V}\frac{d\Sigma}{d\Omega}$ (cm $^{-1}$)')
+    plt.legend()
+    #plt.show()
+    plt.savefig(pp, format='pdf',bbox_inches='tight')
+    #
+    # Third figure background subtracted data
     #
     vals = result.values
     q = result.userkws['q']
@@ -37,32 +71,34 @@ def make_plots(pp,result,dsetname):
     fit = result.best_fit - bg
     plt.figure('Fit_minus_bg')
     plt.clf()
-    plt.errorbar(q,bgdata,1/result.weights,fmt='-k',label='data')
-    plt.plot(q,fit,'-r',label='fit')
+    #plt.errorbar(q[w],bgdata[w],1/result.weights[w],fmt='-k',label='data')
+    plt.plot(q[w],bgdata[w],'ko',label='data',markersize=2)
+    plt.plot(q[w],fit[w],'-r',label='fit')
     plt.yscale('log')
+    plt.xscale('log')
     plt.ylim(1e-6,1)
     plt.title(dsetname) 
-    plt.xlabel('q (nm${-1}$)')
+    plt.xlabel('q (nm$^{-1}$)')
     plt.ylabel(r'$\frac{1}{V}\frac{d\Sigma}{d\Omega}$ (cm $^{-1}$)')
     plt.legend()
     #plt.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     # #%%
-    # Plot residuals
+    # Fourth figure, plot residuals
     plt.figure('Fractonal Residuals')
     plt.clf()
-    plt.errorbar(q,(result.data-result.best_fit)/result.data,
-        1/result.weights/result.data,fmt='ks',label='data')
+    plt.errorbar(q[w],(result.data[w]-result.best_fit[w])/result.data[w],
+        1/result.weights[w]/result.data[w],fmt='ks',label='data')
     plt.yscale('linear')
     plt.ylim(-.025,.025)
     plt.title(dsetname)
-    plt.xlabel('q (nm${-1}$)')
+    plt.xlabel('q (nm$^{-1}$)')
     plt.ylabel('residuals')
     plt.legend()
     #plt.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     # #%%
-    #plot the profile in real space corresponding to the fit
+    # Fifth figure plot the profile in real space corresponding to the fit
     plt.figure('Real_Space_Fit')
     plt.clf()
     P3 = profile([])
@@ -106,13 +142,16 @@ def plot_final_results(pp,resultname):
     dW_asym = np.array([])
     A_T_asym = np.array([])
     dA_T_asym = np.array([])
-    plt.figure('real_space_plots')
-    plt.clf()
+
     col = ['black','red','green','blue','cyan','magenta']
     lsty = ['solid','dashed','dashdot','dotted']
     ncol = len(col)
-    
-
+    for nout, tout in enumerate(multi_results_in):
+        tres = multi_results_in[tout]['result']
+        tsetname = multi_results_in[tout]['dsetname']
+        make_plots(pp,tres,tsetname)
+    plt.figure('real_space_plots_overview')
+    plt.clf()
     for nout, tout in enumerate(multi_results_in):
         tres = multi_results_in[tout]['result']
         tsetname = multi_results_in[tout]['dsetname']

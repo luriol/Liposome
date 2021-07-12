@@ -16,25 +16,7 @@ import xraydb
 from liposome_sum_code import sum_files
 ur = pint.UnitRegistry()
 ur.setup_matplotlib(True)
-#%% Calculation of Horizontal correlation length
-pi = 
-chi_x = lam*R/2/ur('po*ur('pi')
-L = 
-M = 
-W = 6*ur('mm')
-dpix = 55*ur('micron')
-'''
-The Q values for the ROIs are shown in the screenshot attached. 
-So for Q_x, it's 0.03 ~ 0.035 A-1, 0.035 ~ 0.04 A-1 and 0.04 ~ 0.045 A-1 for ROI 1-3. 
 
-1.	Aerogel thickness: 1 mm
-2.	Beam dimensions: vertical FWHM of the beam is 11-12 µm (focused), horizontal beam size is 18.7 µm (cropped by the slits)
-3.	Sample thickness: 6 mm
-4.	Contrast with aerogel: 1.075;
-5.	Q range: ROI 1: 0.03 ~ 0.035 A-1, ROI 2: 0.035 ~ 0.04 A-1, ROI 3: 0.04 ~ 0.045 A-1.
-
-For Q_z, it's roughly +/- 0.02 A-1.
-'''
 #%%
 rhoW = 1.0035*ur('gram/cc')
 A = O.atomic_weight + 2*H.atomic_weight
