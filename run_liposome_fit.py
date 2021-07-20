@@ -16,7 +16,7 @@ import numpy as np
 from lmfit import Parameters
 import os
 import time
-from liposome_plotting import make_plots, plot_final_results
+from liposome_plotting import plot_final_results
 from matplotlib.backends.backend_pdf import PdfPages
 
 #%%
@@ -54,10 +54,10 @@ pp = PdfPages(figname)
 multi_results_out = {}
 #%% Run through data and fit
 select_all = 0  # flag to select all datasets or just a subset
-nshort = 2      # number of times to average data set by 1/2
+nshort = 4      # number of times to average data set by 1/2
 # Truncate the data range so as not to fit below qmin and above qmax
-qmin = 0.05
-qmax = 6
+qmin = 0.1
+qmax = 5
 eps = 1e-3
 water = shorten(data['water_c'],nshort)
 air = shorten(data['aircap_c'],nshort)
@@ -129,7 +129,7 @@ for dind, dsetname in enumerate(data.keys()):
             print('Finished fit #2 redchi = {0:7.2f}'.format(result.redchi))
             multi_results_out[dsetname] = {'result':result,
                 'cfrac':aux_data[dsetname]['cfrac'],'dsetname':dsetname}
-        make_plots(pp,result,dsetname)
+        #make_plots(pp,result,dsetname)
         print('Fit to dataset {0:s} complete'.format(dsetname))
 timestring = str(int(time.time()))[-6:]
 multi_name = 'liposome_multi_fit_results'+timestring+'.npy'

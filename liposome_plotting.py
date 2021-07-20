@@ -5,7 +5,6 @@ Created on Tue May 25 09:48:33 2021
 @author: lluri
 """
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 from liposome_saxs_funs import  profile, liposome_model
 import numpy as np
 
@@ -68,12 +67,16 @@ def make_plots(pp,result,dsetname):
         bgfun1*vals['bg1sf'] +
         bgfun2*vals['bg2sf'])
     bgdata = result.data-bg
-    fit = result.best_fit - bg
+    qfull = np.linspace(0.05,7,10000)
+    # create data set of fit over finer q-range without background.
+    fit = liposome_model.eval(result.params,q=qfull,bgfun1 = qfull*0,bgfun2=qfull*0)
+    #fit = result.best_fit - bg
     plt.figure('Fit_minus_bg')
     plt.clf()
     #plt.errorbar(q[w],bgdata[w],1/result.weights[w],fmt='-k',label='data')
     plt.plot(q[w],bgdata[w],'ko',label='data',markersize=2)
-    plt.plot(q[w],fit[w],'-r',label='fit')
+    #plt.plot(q[w],fit[w],'-r',label='fit')
+    plt.plot(qfull,fit,'-r',label='fit')
     plt.yscale('log')
     plt.xscale('log')
     plt.ylim(1e-6,1)
