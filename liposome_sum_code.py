@@ -11,18 +11,12 @@ import numpy as np
 def find_file(ddir,searchstring):
     '''
 
-    Parameters
-    ----------
-    ddir : string
-        location of data directory.
-    searchstring : string
-        unique filename identifier.
-
-    Returns
-    -------
-    string
-        full file name identifer with file number stripped from end.
-
+    This is a utility to locate a group of files with the 
+    same name but different file numbers.  It takes the name 
+    of the data directory to search "ddir" 
+    and the string to find "searchstring" and returns 
+    all files in that directory which have the 
+    searchstring in their name.
     '''
     names = listdir(ddir)
     tname = [name for name in names if searchstring in name][0]
@@ -109,6 +103,19 @@ def cmb_set(s1,s2):
     return {'q':s1['q'],'I':yout,'dI':sout}
 
 def deglitch(ds1,ds2,cut):
+    '''
+    This routine is used to remove glitches in the data 
+    resulting (typically) from cosmic ray hits on the 
+    detector during the measurement.  ds1 and ds2 are 
+    two data dictionaries containing q, I and dI.  
+    "cut" is a threshold used to compare the data.  
+    If the first data set exceeds the second by more 
+    than the fractional difference specified by the 
+    cut value, then those points in ds1 are replaced 
+    by the corresponding points from ds2.  
+    This routine is used in the routine sum_files_glitch 
+    to avoid summing glitchy points when combining two files.
+    '''
     i1 = ds1['I']
     i2 = ds2['I']
     e1 = ds1['dI']
@@ -139,31 +146,16 @@ def sum_files_glitch(ddir,fbase,nfiles):
         else:
             sum = cmb_set(sum,deglitch(da[fnum],da[fnum-1],cut))
     return(sum)
-def merge_data(x,y):
-    """
-    routine to merge identical x-data points so that data is single
-    valued
-    
-    returns, merged data and error bars, assuming multiple data points
-    at the same value combine with reduced errors
-    """
-    s = 0*x+1 #define error bars to all initially be equal to 1
-    xout = [x[0]]
-    yout = [y[0]]
-    sout = [s[0]]
-    for tx,ty,ts in zip(x[1:],y[1:],s[1:]):
-        if xout[-1] == tx:
-            yout[-1],sout[-1] = cmbwe(yout[-1],sout[-1],ty,ts)
-        else:
-            yout.append(ty)
-            sout.append(ts)
-            xout.append(tx)
-    xout = np.array(xout)
-    yout = np.array(yout)
-    sout = np.array(sout)   
-    return xout,yout,sout
+
 
 def half(dset):
+    '''
+    This routine takes a dataset 
+    (e.g. dictionary of q, I and dI) 
+    and merges all pairs of adjacent points in q, 
+    so that there are half as many q points with 
+    correspondingly smaller error bars.  
+    '''
     q = dset['q']
     I = dset['I']
     dI = dset['dI']
@@ -185,11 +177,22 @@ def half(dset):
     return {'q':qout, 'I':Iout, 'dI':dIout}
 
 def shorten(dset,nhalf):
+    '''
+    This routine applies half to the dataset dset 
+    nhalf times, to reduce the number of point 
+    by $2^{(-nhalf)}$.
+    '''
     for nit in range(nhalf):
         dset = half(dset)
     return dset
     
 def subtract_sets(set1,set2,SF=1):
+    '''
+    Subtracts the intensity in set2 from the intensity 
+    in set1 after scaling set1 by 1/SF.  
+    The errors are combined appropriately 
+    to yeild a (larger) final error.
+    '''
     # SF is adjustable scale factor
     q = set2['q']
     I2 = set2['I']
@@ -197,6 +200,6 @@ def subtract_sets(set1,set2,SF=1):
     I1 = set1['I']
     dI1 = set1['dI']
     I = I1/SF-I2
-    dI = np.sqrt(dI1**2+dI2**2)
+    dI = np.sqrt(dI1**2/SF**2+dI2**2)
     return {'q':q, 'I':I, 'dI':dI}
 

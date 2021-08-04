@@ -15,52 +15,43 @@ import time
 from liposome_fit_funs import fit_liposome, plot_final_results
 #%% (A)
 # read in saved data and open
-dataname =  'liposome_data.npy'
+dataname =  'liposome_data_june_A.npy'
 with open(dataname,'rb') as fdir:
     data = np.load(fdir,allow_pickle=True)[()]
-#%%
-# create auxilary array of data that is associated with individual
-# datasets
-aux_data = {'egg4_chol1_200_a':{'cfrac':0.2,'R':200/2,'dR':60/2},
-            'egg2_chol1_200_a':{'cfrac':0.33,'R':200/2,'dR':60/2},
-            'egg3_chol2_200_a':{'cfrac':0.4,'R':200/2,'dR':60/2},
-            'egg1_chol1_200_a':{'cfrac':0.5,'R':200/2,'dR':60/2},
-            'egg2_chol3_200_a':{'cfrac':0.6,'R':200/2,'dR':60/2},
-            'eggPC_50_d':{'cfrac':0,'R':62/2,'dR':15/2},
-            'egg4_chol1_50_a':{'cfrac':.2,'R':62/2,'dR':15/2},
-            'egg2_chol3_50_b':{'cfrac':.6,'R':62/2,'dR':15/2},
-            'egg1_chol1_50_a':{'cfrac':.5,'R':62/2,'dR':15/2},
-            'egg3_chol2_50_a':{'cfrac':.4,'R':62/2,'dR':15/2},
-            'egg2_chol1_50_a':{'cfrac':.33,'R':62/2,'dR':15/2},
-            }
+
 #%%
 # Define list of just 50 (62) nm diameter 
 fit_pars = {}
+aux_data = {}
+D50 = ['DPPC_50_C_450','DPPC_50_C_455']
+for thiskey in D50:
+    adr = {'R':60,'dR':60*.25,'cfrac':0} 
+    # Radius, polydispersity and cholesterol fraction are the same for all data
+    # sets (approximately)
+    aux_data[thiskey] = adr
 fit_pars['aux_data'] = aux_data
-D50 = ['eggPC_50_d','egg4_chol1_50_a','egg2_chol3_50_b',
-      'egg1_chol1_50_a','egg3_chol2_50_a','egg2_chol1_50_a']
 fit_pars['selected_data'] = D50[0:2]
-fit_pars['backgrounds'] = ['water_c','aircap_c']
+fit_pars['backgrounds'] = ['water_00008','air_new']
 #%% Set up  names (B)
 T1 = time.time()
 timestring = str(int(T1))[-6:]
 fit_pars['figname'] = 'Results/liposome_fit_results_'+timestring+'.pdf'
 fit_pars['resultname'] = 'Results/liposome_fit_results_'+timestring+'.npz'
 #%% (C) Define parameters for fit
-fit_pars['nshort'] = 4      
-fit_pars['qmin'] = 0.1
-fit_pars['qmax'] = 5
+fit_pars['nshort'] = 3      
+fit_pars['qmin'] = 0.02
+fit_pars['qmax'] = 4
 fit_pars['nfev'] =200000
-fit_pars['psize'] = 16
+fit_pars['psize'] = 4
 linear_regression = 1
 differential_evolution = 0
 fit_pars['fit_method'] = differential_evolution
 #%%
 #Initialize the parameters for the fit.
 #
-par = Parameters()
-par.add('bg1sf',value=1.00,vary=True,min=.25,max=4) 
-par.add('bg2sf',value=0,vary=True,min=-.5,max=.5) 
+par = Parameters() 
+par.add('bg1sf',value=1,vary=True,min=.5,max=1.5) 
+par.add('bg2sf',value=0,vary=False,min=-.5,max=.5) 
 par.add('bg',value=0,vary=False,min= -.001,max=.001) 
 par.add('lbg',value=0.000,vary=False,min=0,max=1e-4) 
 par.add('qbg',value=0.000,vary=False,min=0,max=1e-4) 
@@ -70,15 +61,15 @@ par.add('d_M',value=.1,vary=True,min=.05,max=.15)
 par.add('A_H',value=107,vary=False,min=50,max=200)
 par.add('A_T',value=-150,vary=True,min=-250,max=0)
 par.add('A_M',value=-334,vary=False,min=-335,max=0) 
-par.add('sig',value=.3,vary=True,min=.2,max=.75)  
+par.add('sig',value=.3,vary=True,min=.1,max=1)  
 par.add('I',value=1,vary=True,min=.1,max=10) 
-par.add('R0',value=50,vary=False,min=10,max=300) 
+par.add('R0',value=50,vary=True,min=10,max=300) 
 par.add('Rsig',value=15,vary=False,min=.25*10,max=.25*300) 
-par.add('W_asym',value=0,vary=False,min=-2,max=2) 
-par.add('A_T_asym',value=0,vary=False,min=-2,max=2) 
+par.add('W_asym',value=0,vary=True,min=-2,max=2) 
+par.add('A_T_asym',value=0,vary=True,min=-2,max=2) 
 #%% Now run the actual fit
-result = fit_liposome(data,par,fit_pars)  
+fit_liposome(data,par,fit_pars)  
 #%% Plot the fit results
-plot_final_results(result,fit_pars)
+plot_final_results(fit_pars)
 
 

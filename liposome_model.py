@@ -9,7 +9,7 @@ import numpy as np
 from lmfit.models import Model
 from liposome_saxs_funs import slab, profile
 
-
+# (A) define model
 def saxsfit(q,bgfun1,bgfun2,bg=0,bg1sf=1,bg2sf=0,W=4,sig=.3,d_H=0.5,d_M=0.5,I=1,A_H=107,
             A_T=-90,A_M=-334,R0=200,Rsig=50,lbg=0,qbg=0,W_asym=0,A_T_asym=0):
     Wout = W*(1-2*np.arctan(W_asym)/np.pi)
@@ -33,7 +33,7 @@ def saxsfit(q,bgfun1,bgfun2,bg=0,bg1sf=1,bg2sf=0,W=4,sig=.3,d_H=0.5,d_M=0.5,I=1,
     F = (F*norm+bgfun1*bg1sf+bgfun2*bg2sf + np.abs(bg)+np.abs(lbg)*q + 
     +np.abs(qbg)*q**2)
     return F
-
+# (B) routine to load model parameters into slab parameters
 def load_par(self,par):
         W = par['W'].value
         sig = par['sig'].value
@@ -56,7 +56,7 @@ def load_par(self,par):
         self.add_slab(slab(-A_M,d_M/2+dr,sig,'inner head'))
         self.add_slab(slab(-A_T_out,Wout/2-d_H+dr,sig,'inner tail'))
         self.add_slab(slab(-A_H,Wout/2+dr,sig,'inner tail'))
-        
+# (C) convert liposome model into lmfit fitting model    
 liposome_model = Model(saxsfit,independent_vars=['q','bgfun1','bgfun2'])
 
 

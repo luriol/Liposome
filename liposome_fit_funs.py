@@ -48,29 +48,28 @@ def fit_liposome(data,par,fit_pars):
                             fit_kws={'popsize':fit_pars['psize']}
                             )
                 # append additional variables to result values
-                result.values['fit_pars'] = fit_pars
                 print('Finished fit #2 redchi = {0:7.2f}'.format(result.redchi))
                 multi_results_out[dsetname] = {'result':result,
-                    'cfrac':fit_pars['aux_data'][dsetname]['cfrac'],'dsetname':dsetname}
+                    'cfrac':fit_pars['aux_data'][dsetname]['cfrac'],'dsetname':dsetname,
+                    'fit_pars':fit_pars}
             print('Fit to dataset {0:s} complete'.format(dsetname))
     with open(fit_pars['resultname'],'wb') as fd:
         np.save(fd,multi_results_out,allow_pickle=True)
-    return result
-def make_plots(result,fit_pars,dsetname):
-    pp = PdfPages(fit_pars['figname'])
+    return multi_results_out
+def make_plots(pp,result,fit_pars,dsetname):
     #
     # First figure, printout of fit report
     #
     if not os.path.exists('Results'):
         os.mkdir('Results')
     fit_results = result.fit_report()
-    fig = plt.figure('results')
+    fig = plt.figure('results_{0}'.format(dsetname))
     fig.clf()
     ax = fig.add_axes([0, 0, 1, 1])
     ax.text(.02,.02,fit_results,fontsize='x-small')
     ax.text(.75,.9,dsetname,fontsize='large')
     ax.axis('off')
-    #fig.show()
+    fig.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #
     # Second figure plot data and background
@@ -85,7 +84,7 @@ def make_plots(result,fit_pars,dsetname):
         bgfun2*vals['bg2sf'])
     data = result.data
     fit = result.best_fit
-    plt.figure('Fit_with_bg')
+    plt.figure('Fit_with_bg_{0}'.format(dsetname))
     plt.clf()
     w = result.weights>0
     plt.errorbar(q[w],data[w],1/result.weights[w],fmt='-k',label='data')
@@ -99,11 +98,12 @@ def make_plots(result,fit_pars,dsetname):
     plt.plot(q[w], bg[w],'--k',label='total bg')
     plt.yscale('linear')
     plt.xscale('linear')
-    plt.ylim(.0325,.07)
+    #plt.ylim(.0325,.07)
     plt.title(dsetname) 
     plt.xlabel('q (nm$^{-1}$)')
     plt.ylabel(r'$\frac{1}{V}\frac{d\Sigma}{d\Omega}$ (cm $^{-1}$)')
     plt.legend()
+    plt.yscale('log')
     #plt.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #
@@ -122,7 +122,7 @@ def make_plots(result,fit_pars,dsetname):
     # create data set of fit over finer q-range without background.
     fit = liposome_model.eval(result.params,q=qfull,bgfun1 = qfull*0,bgfun2=qfull*0)
     #fit = result.best_fit - bg
-    plt.figure('Fit_minus_bg')
+    plt.figure('Fit_minus_bg_{0}'.format(dsetname))
     plt.clf()
     #plt.errorbar(q[w],bgdata[w],1/result.weights[w],fmt='-k',label='data')
     plt.plot(q[w],bgdata[w],'ko',label='data',markersize=2)
@@ -130,7 +130,7 @@ def make_plots(result,fit_pars,dsetname):
     plt.plot(qfull,fit,'-r',label='fit')
     plt.yscale('log')
     plt.xscale('log')
-    plt.ylim(1e-6,1)
+    plt.ylim(1e-6,100)
     plt.title(dsetname) 
     plt.xlabel('q (nm$^{-1}$)')
     plt.ylabel(r'$\frac{1}{V}\frac{d\Sigma}{d\Omega}$ (cm $^{-1}$)')
@@ -139,7 +139,7 @@ def make_plots(result,fit_pars,dsetname):
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     # #%%
     # Fourth figure, plot residuals
-    plt.figure('Fractonal Residuals')
+    plt.figure('Fractonal Residuals_{0}'.format(dsetname))
     plt.clf()
     plt.errorbar(q[w],(result.data[w]-result.best_fit[w])/result.data[w],
         1/result.weights[w]/result.data[w],fmt='ks',label='data')
@@ -153,7 +153,7 @@ def make_plots(result,fit_pars,dsetname):
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     # #%%
     # Fifth figure plot the profile in real space corresponding to the fit
-    plt.figure('Real_Space_Fit')
+    plt.figure('Real_Space_Fit_{0}'.format(dsetname))
     plt.clf()
     P3 = profile([])
     P3.load_par(result.params)
@@ -161,7 +161,6 @@ def make_plots(result,fit_pars,dsetname):
     plt.title(dsetname)
     #plt.show()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
-    pp.close()
     #%%
 def key_plot(Cf,y,dy,Rs,chi2,rlim,chi2lim):
     gg1 = (chi2<chi2lim)*(Rs<rlim)
@@ -180,7 +179,7 @@ def key_plot(Cf,y,dy,Rs,chi2,rlim,chi2lim):
     if (sum(gg4)>0):
         plt.errorbar(Cf[gg4],y[gg4],dy[gg4],fmt='ro',
                 label='R > {0:d} chi2 > {1:d}'.format(rlim,chi2lim))
-def plot_final_results(result,fit_pars):
+def plot_final_results(fit_pars):
     # reload mult-results file and restore
     with open(fit_pars['resultname'],'rb') as fd:
         multi_results_in = np.load(fd,allow_pickle=True)[()]
@@ -205,7 +204,7 @@ def plot_final_results(result,fit_pars):
     for nout, tout in enumerate(multi_results_in):
         tres = multi_results_in[tout]['result']
         tsetname = multi_results_in[tout]['dsetname']
-        make_plots(result,fit_pars,tsetname)
+        make_plots(pp,tres,fit_pars,tsetname)
     plt.figure('real_space_plots_overview')
     plt.clf()
     for nout, tout in enumerate(multi_results_in):
@@ -224,12 +223,12 @@ def plot_final_results(result,fit_pars):
         dW_asym = np.append(dW_asym,params['W_asym'].stderr)
         A_T_asym = np.append(A_T_asym,params['A_T_asym'].value)
         dA_T_asym = np.append(dA_T_asym,params['A_T_asym'].stderr)
-        P3 = profile([])
-        P3.load_par(params)
-        off = cfrac*200
-        P3.draw_rho(offset = 333.3+off, ymin = 300, 
-                    ymax = 525, color=col[nout%ncol],
-                    linestyle = lsty[int(nout/ncol)],label=tsetname)
+    P3 = profile([])
+    P3.load_par(params)
+    off = cfrac*200
+    P3.draw_rho(offset = 333.3+off, ymin = 300, 
+                ymax = 525, color=col[nout%ncol],
+                linestyle = lsty[int(nout/ncol)],label=tsetname)
     plt.xlabel('distance [nm]')
     plt.ylabel('electron density $e^-/$nm$^3$')
     plt.legend(loc=(1.04,0))
@@ -277,5 +276,6 @@ def plot_final_results(result,fit_pars):
     plt.ylabel('fit asymmetry parameter ')
     plt.legend(loc=(1.04,0))
     plt.savefig(pp, format='pdf',bbox_inches='tight')
+    pp.close()
 
     

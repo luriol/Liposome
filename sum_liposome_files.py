@@ -31,7 +31,7 @@ names_air = ['aircap_c']
 # Segg2_chol3_50_b_00029_00001.dat.  This needs to be deleted, or else
 # causes a problem when trying to sum
 
-ddir = 'C:\\Users\\lluri\\Dropbox\\Runs\\2021\\March 2021 Liposomes\\Data\\SAXS\\Averaged\\'
+ddir = 'C:\\Users\\Gobind Basnet\\Documents\\ANL\\SAXS June 060821\\'
 nfiles = 40
 data_sets = {}
 all_sets = [names_200_nm,names_50_nm,names_water,names_air]
