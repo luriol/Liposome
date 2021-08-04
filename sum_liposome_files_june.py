@@ -18,13 +18,18 @@ from matplotlib import pyplot as plt
 from liposome_sum_code import find_file, sum_files_glitch
 
 
-names = ['DPPC_30_RT_1','DPPC_50_RT_1','DPPC_100_RT_1',
-        'water2','DPPC_200_RT_1','water1']
-
-
-dhead = 'C:\\Users\\lluri\\Dropbox\\Runs\\2021\\'
-ddir = dhead + 'June 2021 Liposomes\\SAXS\\Averaged\\'
-nfiles = 30
+names = []
+for T in range(21):
+    fnameB = 'DPPC_50_B_{0:3d}'.format(370+5*T)
+    names.append(fnameB)
+for T in range(21):
+    fnameC = 'DPPC_50_C_{0:3d}'.format(370+5*T)
+    names.append(fnameC)
+names.append('water_00008')
+#%%
+dhead = 'C:\\Users\\Gobind Basnet\\Documents\\ANL\\'
+ddir = dhead + 'SAXS June 060821\\'
+nfiles = 10
 data_sets = {}
 all_sets = [names]
 
@@ -39,7 +44,18 @@ for this_set in all_sets:
         data_sets[tnam] = sum_files_glitch(ddir,tfn,nfiles)
         data_sets[tnam]['I'] *=norm
         data_sets[tnam]['dI'] *= norm
-savename = 'liposome_data_june.npy'
+#%% Append extra empty capillary file from march data
+with open('liposome_data.npy','rb') as fd:
+    data2 = np.load(fd,allow_pickle=True)
+aircap = data2[()]['aircap_c']
+qnew = water['q']
+Inew = np.interp(qnew,aircap['q'],aircap['I'],left = aircap['I'][-1])
+dInew = np.interp(qnew,aircap['q'],aircap['dI'],left = aircap['dI'][-1])
+air_new = {'q':qnew,'I':Inew,'dI':dInew}
+data_sets['air_new'] = air_new
+        
+        
+savename = 'liposome_data_june_A.npy'
 with open(savename,'wb') as fdir:
     np.save(fdir,data_sets,allow_pickle=True)
 #%%
@@ -68,9 +84,9 @@ plt.savefig('all_plots_june.jpg')
 from liposome_sum_code import subtract_sets
 plt.figure('all_data_bg_june')
 plt.clf()
-water = mydata['water1']
+water = mydata['water_00008']
 for tsetname in mydata.keys():
-    if tsetname not in ['water_c','aircap_c']:
+    if tsetname not in ['water_00008','air_new']:
         tset = mydata[tsetname]
         tdif = subtract_sets(tset,water)
         q = tdif['q']
@@ -85,6 +101,7 @@ plt.xscale('log')
 plt.ylim(0.0001,1.5)
 plt.xlim(.08,8)
 plt.savefig('all_plots_bg_june.jpg')
+#%%
 
     
     
