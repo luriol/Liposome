@@ -231,9 +231,6 @@ def plot_final_results(fit_pars):
             cfrac = multi_results_in[tout]['cfrac']
             Cf  = np.append(Cf,cfrac)
         P3 = profile([])
-        # Force asymetry to be positive
-        params['W_asym'].value = abs(params['W_asym'].value)
-        params['A_T_asym'].value = abs(params['A_T_asym'].value)
         P3.load_par(params)
         if fit_pars['sample variable'] == 'Cholesterol':
             off = cfrac*200
@@ -290,7 +287,7 @@ def plot_final_results(fit_pars):
     
     plt.figure('asymmetry')
     plt.clf()
-    key_plot(xvals,abs(W_asym),dW_asym,Rs,chi2,rlim,chi2lim)
+    key_plot(xvals,W_asym,dW_asym,Rs,chi2,rlim,chi2lim)
     plt.legend()
     plt.xlabel(xlabel)
     plt.ylabel('fit asymmetry parameter ')

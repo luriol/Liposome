@@ -69,7 +69,7 @@ par.add('sig',value=.3,vary=True,min=.1,max=1)
 par.add('I',value=1,vary=True,min=.1,max=10) 
 par.add('R0',value=50,vary=True,min=10,max=300) 
 par.add('Rsig',value=15,vary=False,min=.25*10,max=.25*300) 
-par.add('W_asym',value=0,vary=True,min=-2,max=2) 
+par.add('W_asym',value=0,vary=True,min=0,max=10) 
 par.add('A_T_asym',value=0,vary=True,min=-2,max=2) 
 #%% Now run the actual fit
 fit_liposome(data,par,fit_pars)  
