@@ -193,6 +193,7 @@ def plot_final_results(fit_pars):
     dWs = np.array([])
     chi2 = np.array([])
     Cf = np.array([])
+    Ts = np.array([])
     W_asym = np.array([])
     dW_asym = np.array([])
     A_T_asym = np.array([])
@@ -209,8 +210,7 @@ def plot_final_results(fit_pars):
     plt.clf()
     for nout, tout in enumerate(multi_results_in):
         tres = multi_results_in[tout]['result']
-        tsetname = multi_results_in[tout]['dsetname']
-        cfrac = multi_results_in[tout]['cfrac']
+        tsetname = multi_results_in[tout]['dsetname']  
         params = tres.params  
         chi2 = np.append(chi2,tres.redchi)
         sigs = np.append(sigs,params['sig'].value)
@@ -218,39 +218,59 @@ def plot_final_results(fit_pars):
         Ws = np.append(Ws,params['W'].value)
         dsigs = np.append(dsigs,params['sig'].stderr)
         dWs = np.append(dWs,params['W'].stderr)
-        Cf  = np.append(Cf,cfrac)
         W_asym = np.append(W_asym,params['W_asym'].value)
         dW_asym = np.append(dW_asym,params['W_asym'].stderr)
         A_T_asym = np.append(A_T_asym,params['A_T_asym'].value)
         dA_T_asym = np.append(dA_T_asym,params['A_T_asym'].stderr)
-    P3 = profile([])
-    P3.load_par(params)
-    off = cfrac*200
-    P3.draw_rho(offset = 333.3+off, ymin = 300, 
-                ymax = 525, color=col[nout%ncol],
-                linestyle = lsty[int(nout/ncol)],label=tsetname)
+        if fit_pars['sample variable'] == 'Temperature':
+            T = float(tsetname[10:13])/10.0
+            Ts = np.append(Ts,T)
+            print(T)
+            print(tsetname)
+        elif fit_pars['sample variable'] == 'Cholesterol':
+            cfrac = multi_results_in[tout]['cfrac']
+            Cf  = np.append(Cf,cfrac)
+        P3 = profile([])
+        # Force asymetry to be positive
+        params['W_asym'].value = abs(params['W_asym'].value)
+        params['A_T_asym'].value = abs(params['A_T_asym'].value)
+        P3.load_par(params)
+        if fit_pars['sample variable'] == 'Cholesterol':
+            off = cfrac*200
+        elif fit_pars['sample variable'] == 'Temperature':
+            off = (T-36)*200*.25/4.0
+        P3.draw_rho(offset = 333.3+off, ymin = 300, 
+                    ymax = 525, color=col[nout%ncol],
+                    linestyle = lsty[int(nout/ncol)],label=tsetname)
     plt.xlabel('distance [nm]')
     plt.ylabel('electron density $e^-/$nm$^3$')
     plt.legend(loc=(1.04,0))
     plt.savefig(pp, format='pdf',bbox_inches='tight')
+    if fit_pars['sample variable'] == 'Cholesterol':
+        xvals = Cf
+        xlabel = 'chlesterol fraction'
+    elif fit_pars['sample variable'] == 'Temperature':
+        xvals = Ts
+        xlabel = 'Temperature (C)'
+        # throw away radius values, as they are all the same
+        Rs = Rs*0+50
     plt.figure('Ws')
     plt.clf()
     chi2lim = 2
     rlim = 100
-    key_plot(Cf,Ws,dWs,Rs,chi2,rlim,chi2lim)
-    plt.xlabel('cholesterol fraction')
+    key_plot(xvals,Ws,dWs,Rs,chi2,rlim,chi2lim)
+    plt.xlabel(xlabel)
     plt.ylabel('bilayer thickness')
-    plt.legend(loc=(1.04,0))
+    plt.legend()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
-    
     
     #plt.savefig('Results\\'+timestring+'thickness.png')
     plt.figure('sigs')
     plt.clf()
-    key_plot(Cf,sigs,dsigs,Rs,chi2,rlim,chi2lim)
-    plt.xlabel('cholesterol fraction')
+    key_plot(xvals,sigs,dsigs,Rs,chi2,rlim,chi2lim)
+    plt.xlabel(xlabel)
     plt.ylabel('bilayer roughness')
-    plt.legend(loc=(1.04,0))
+    plt.legend()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #plt.savefig('Results\\'+timestring+'roughness.png')
     
@@ -259,20 +279,20 @@ def plot_final_results(fit_pars):
     gg1 = Rs<rlim
     gg2 = Rs>rlim
     if sum(gg1)>1:
-        plt.plot(Cf[gg1],chi2[gg1],'ks',label='R0 < {0:4.1f}'.format(rlim))
+        plt.plot(xvals[gg1],chi2[gg1],'ks',label='R0 < {0:4.1f}'.format(rlim))
     if sum(gg2)>1:
-        plt.plot(Cf[gg2],chi2[gg2],'rs',label='R0 > {0:4.1f}'.format(rlim))
-    plt.xlabel('cholesterol fraction')
+        plt.plot(xvals[gg2],chi2[gg2],'rs',label='R0 > {0:4.1f}'.format(rlim))
+    plt.xlabel(xlabel)
     plt.ylabel('fit chi-squared (reduced) ')
-    plt.legend(loc=(1.04,0))
+    plt.legend()
     plt.savefig(pp, format='pdf',bbox_inches='tight')
     #plt.savefig('Results\\'+timestring+'redchi.png')
     
     plt.figure('asymmetry')
     plt.clf()
-    key_plot(Cf,W_asym,dW_asym,Rs,chi2,rlim,chi2lim)
+    key_plot(xvals,abs(W_asym),dW_asym,Rs,chi2,rlim,chi2lim)
     plt.legend()
-    plt.xlabel('cholesterol fraction')
+    plt.xlabel(xlabel)
     plt.ylabel('fit asymmetry parameter ')
     plt.legend(loc=(1.04,0))
     plt.savefig(pp, format='pdf',bbox_inches='tight')

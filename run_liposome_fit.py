@@ -43,6 +43,10 @@ fit_pars['qmin'] = 0.02
 fit_pars['qmax'] = 4
 fit_pars['nfev'] =200000
 fit_pars['psize'] = 4
+# Choose the variable for comparing different samples in 
+# the final fit results plot.
+fit_pars['sample variable'] = 'Temperature'
+#fit_pars['sample variable'] = 'Cholesterol'
 linear_regression = 1
 differential_evolution = 0
 fit_pars['fit_method'] = differential_evolution
