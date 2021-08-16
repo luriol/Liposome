@@ -23,7 +23,7 @@ with open(dataname,'rb') as fdir:
 # Define list of just 50 (62) nm diameter 
 fit_pars = {}
 aux_data = {}
-D50 = ['DPPC_50_C_450','DPPC_50_C_455']
+D50  = [ fname for fname in data.keys() if (('_B_' in fname) or ('_C_' in fname))]
 for thiskey in D50:
     adr = {'R':60,'dR':60*.25,'cfrac':0} 
     # Radius, polydispersity and cholesterol fraction are the same for all data
@@ -42,7 +42,7 @@ fit_pars['nshort'] = 3
 fit_pars['qmin'] = 0.02
 fit_pars['qmax'] = 4
 fit_pars['nfev'] =200000
-fit_pars['psize'] = 4
+fit_pars['psize'] = 3
 # Choose the variable for comparing different samples in 
 # the final fit results plot.
 fit_pars['sample variable'] = 'Temperature'
@@ -59,17 +59,17 @@ par.add('bg2sf',value=0,vary=False,min=-.5,max=.5)
 par.add('bg',value=0,vary=False,min= -.001,max=.001) 
 par.add('lbg',value=0.000,vary=False,min=0,max=1e-4) 
 par.add('qbg',value=0.000,vary=False,min=0,max=1e-4) 
-par.add('W',value=4.37,vary=True,min=3,max=6) 
+par.add('W',value=4.37,vary=True,min=3.6,max=4.8) 
 par.add('d_H',value=.7,vary=False,min=.3,max=.9) 
 par.add('d_M',value=.1,vary=True,min=.05,max=.15) 
 par.add('A_H',value=107,vary=False,min=50,max=200)
 par.add('A_T',value=-150,vary=True,min=-250,max=0)
 par.add('A_M',value=-334,vary=False,min=-335,max=0) 
-par.add('sig',value=.3,vary=True,min=.1,max=1)  
+par.add('sig',value=.3,vary=True,min=.1,max=0.5)  
 par.add('I',value=1,vary=True,min=.1,max=10) 
-par.add('R0',value=50,vary=True,min=10,max=300) 
+par.add('R0',value=50,vary=True,min=30,max=70) 
 par.add('Rsig',value=15,vary=False,min=.25*10,max=.25*300) 
-par.add('W_asym',value=0,vary=True,min=0,max=10) 
+par.add('W_asym',value=0,vary=True,min=2,max=6) 
 par.add('A_T_asym',value=0,vary=True,min=-2,max=2) 
 #%% Now run the actual fit
 fit_liposome(data,par,fit_pars)  
