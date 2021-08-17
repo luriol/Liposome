@@ -60,8 +60,7 @@ def make_plots(pp,result,fit_pars,dsetname):
     #
     # First figure, printout of fit report
     #
-    if not os.path.exists('Results'):
-        os.mkdir('Results')
+
     fit_results = result.fit_report()
     fig = plt.figure('results_{0}'.format(dsetname))
     fig.clf()
@@ -167,6 +166,9 @@ def key_plot(Cf,y,dy,Rs,chi2,rlim,chi2lim):
     gg2 = (chi2>chi2lim)*(Rs<rlim)
     gg3 = (chi2<chi2lim)*(Rs>rlim)
     gg4 = (chi2>chi2lim)*(Rs>rlim)
+    # set error bars on inf and nans to zero
+    dy[np.isnan(dy)]=0
+    dy[np.isinf(dy)]=0
     if (sum(gg1)>0):
         plt.errorbar(Cf[gg1],y[gg1],dy[gg1],fmt='ks',
                 label='R < {0:d} chi2 < {1:d}'.format(rlim,chi2lim))
@@ -181,6 +183,8 @@ def key_plot(Cf,y,dy,Rs,chi2,rlim,chi2lim):
                 label='R > {0:d} chi2 > {1:d}'.format(rlim,chi2lim))
 def plot_final_results(fit_pars):
     # reload mult-results file and restore
+    if not os.path.exists('Results'):
+        os.mkdir('Results')
     with open(fit_pars['resultname'],'rb') as fd:
         multi_results_in = np.load(fd,allow_pickle=True)[()]
     pp = PdfPages(fit_pars['figname'])

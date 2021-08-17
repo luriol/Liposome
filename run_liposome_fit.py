@@ -21,6 +21,7 @@ with open(dataname,'rb') as fdir:
 
 #%%
 # Define list of just 50 (62) nm diameter 
+np.random.seed(2)
 fit_pars = {}
 aux_data = {}
 D50  = [ fname for fname in data.keys() if (('_B_' in fname) or ('_C_' in fname))]
