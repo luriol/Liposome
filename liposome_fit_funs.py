@@ -167,20 +167,35 @@ def key_plot(Cf,y,dy,Rs,chi2,rlim,chi2lim):
     gg3 = (chi2<chi2lim)*(Rs>rlim)
     gg4 = (chi2>chi2lim)*(Rs>rlim)
     # set error bars on inf and nans to zero
-    dy[np.isnan(dy)]=0
-    dy[np.isinf(dy)]=0
     if (sum(gg1)>0):
-        plt.errorbar(Cf[gg1],y[gg1],dy[gg1],fmt='ks',
+        try:
+            plt.errorbar(Cf[gg1],y[gg1],dy[gg1],fmt='ks',
                 label='R < {0:d} chi2 < {1:d}'.format(rlim,chi2lim))
+        except:
+            plt.plot(Cf[gg1],y[gg1],'-ks',
+                     axislabel='R < {0:d} chi2 < {1:d}'.format(rlim,chi2lim))
     if (sum(gg2)>0):
-        plt.errorbar(Cf[gg2],y[gg2],dy[gg2],fmt='ko',
-                label='R < {0:d} chi2 > {1:d}'.format(rlim,chi2lim))    
+        try:
+            plt.errorbar(Cf[gg2],y[gg2],dy[gg2],fmt='ko',
+                label='R < {0:d} chi2 > {1:d}'.format(rlim,chi2lim)) 
+        except:
+             plt.plot(Cf[gg2],y[gg2],'-ko',
+                label='R < {0:d} chi2 > {1:d}'.format(rlim,chi2lim)) 
     if (sum(gg3)>0):
-        plt.errorbar(Cf[gg3],y[gg3],dy[gg3],fmt='rs',
+        try: 
+            plt.errorbar(Cf[gg3],y[gg3],dy[gg3],fmt='rs',
                 label='R > {0:d} chi2 < {1:d}'.format(rlim,chi2lim))  
+        except:
+            plt.plot(Cf[gg3],y[gg3],'-rs',
+                label='R > {0:d} chi2 < {1:d}'.format(rlim,chi2lim))
     if (sum(gg4)>0):
-        plt.errorbar(Cf[gg4],y[gg4],dy[gg4],fmt='ro',
+        try:
+            plt.errorbar(Cf[gg4],y[gg4],dy[gg4],fmt='ro',
                 label='R > {0:d} chi2 > {1:d}'.format(rlim,chi2lim))
+        except:
+            plt.plot(Cf[gg4],y[gg4],'ro',
+                label='R > {0:d} chi2 > {1:d}'.format(rlim,chi2lim))
+            
 def plot_final_results(fit_pars):
     # reload mult-results file and restore
     if not os.path.exists('Results'):
