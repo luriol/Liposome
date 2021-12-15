@@ -58,16 +58,16 @@ norm = sig.to('cm^-1')/wave
 print('normalization factor {0:7.3e}'.format(norm))
 #%%
 # we can also estimate the theoretical normalization
-Cj = 200*ur('microA/V')/(100*ur('kHz/V'))/(1*ur('e'))
+Ct = 200*ur('microA/V')/(100*ur('kHz/V'))/(1*ur('e'))
 Ephot = 12*ur('keV')
 Epair = 3.65*ur('eV')
 Npairs = Ephot/Epair
-Cj /= Npairs
-print('Calculated Cj = {0:7.3e~P}'.format(Cj.to('dimensionless')))
+Ct /= Npairs
+print('Calculated Ct = {0:7.3e~P}'.format(Ct.to('dimensionless')))
 dOmega = (0.146/2269)**2*ur('steradian')
 print('detector solid angle {0:7.3e~P}'.format(dOmega))
 Lambda = 0.15*ur('cm') # sample thickness
-print('Ct/Cj = {0:7.3e~P}'.format((norm*Lambda*dOmega).to('dimensionless')))
+print('Cj/Ct = {0:7.3e~P}'.format((1/(norm*Lambda*dOmega)).to('dimensionless')))
 #%% Estimate the normalization constant from the data
 I = (water['I']-air['I'])
 q = water['q']
@@ -78,7 +78,7 @@ dI = dI[rr]
 q = q[rr]
 plt.figure('photon flux')
 plt.clf()
-plt.plot(q,I**2/dI**2)
+plt.plot(q,I**2/dI**2)  # plotting I^2/dI^2 gives true photons
 plt.yscale('log')
 plt.figure('raw counts')
 plt.clf()
@@ -91,16 +91,18 @@ npring = 1000
 ppix = Iraw/npring
 I0 = 4e11
 # raw counts per pixel around q = 3 inv. nm. is 0.09 
-N = .09
-#so N = Cj*ppix/I0, Cj = N*I0/ppix
-Cj = (N*I0/ppix)*ur('dimensionless')
-print('Cj  from I^2/dI^2 {0:7.3e~P}'.format(Cj))
+N = .09 
+# If ppix is the true count rate then N = Cj*ppix/(Ct I0)
+# So Cj/Ct = N I0 / ppix
+ 
+CtoCj = (N*I0/ppix)*ur('dimensionless')
+print('Ct/Cj  from I^2/dI^2 {0:7.3e~P}'.format(CtoCj))
 #%%
-# put in alternate value of Cj from comparint I to dI
-k = 1/(Lambda*dOmega*Cj)
-print('photons/ct = {0:7.3e}'.format(Cj.to_base_units()))
+# put in alternate value of Cj from comparing I to dI
+k = 1/(Lambda*dOmega*CtoCj)
+print('photons/ct = {0:7.3e}'.format(CtoCj.to_base_units()))
 Jt = 288644.200
-It = (Jt*Cj).to('dimensionless')
+It = (Jt*Ct).to('dimensionless')
 print('Estimated transmitted flux {0:7.3e~P}'.format(It))
 print('theoretical conversion factor {0:7.3e~P}'.format(k.to('cm^-1')))
 #%%

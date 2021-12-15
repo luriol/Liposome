@@ -173,7 +173,7 @@ def key_plot(Cf,y,dy,Rs,chi2,rlim,chi2lim):
                 label='R < {0:d} chi2 < {1:d}'.format(rlim,chi2lim))
         except:
             plt.plot(Cf[gg1],y[gg1],'-ks',
-                     axislabel='R < {0:d} chi2 < {1:d}'.format(rlim,chi2lim))
+                label='R < {0:d} chi2 < {1:d}'.format(rlim,chi2lim))
     if (sum(gg2)>0):
         try:
             plt.errorbar(Cf[gg2],y[gg2],dy[gg2],fmt='ko',
