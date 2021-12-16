@@ -70,6 +70,7 @@ Lambda = 0.15*ur('cm') # sample thickness
 print('Cj/Ct = {0:7.3e~P}'.format((1/(norm*Lambda*dOmega)).to('dimensionless')))
 #%% Estimate the normalization constant from the data
 I = (water['I']-air['I'])
+# test
 q = water['q']
 dI = np.sqrt(water['dI']**2+air['dI']**2)
 rr = (q>.1)*(q<6)
